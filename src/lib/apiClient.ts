@@ -7,3 +7,5 @@
 +  const baseUrl = '/api/v1'; // Use relative URL for Vite proxy
    return `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
  };
+
+export default formatUrl
