@@ -207,11 +207,34 @@ const API_BASE_URL = `/api/v1`;
 export async function getVendors(): Promise<Vendor[]> {
   try {
     return await apiClient.get<Vendor[]>('vendors');
+  } catch (error) {
+    console.warn('API call failed, using mock vendors:', error);
+    return mockVendors;
+  }
+}
+
+export async function getRecipients(): Promise<Recipient[]> {
+  try {
+    return await apiClient.get<Recipient[]>('recipients');
+  } catch (error) {
     console.warn('API call failed, using mock recipients:', error);
     return mockRecipients;
   }
 }
 
+export async function getMaterials(): Promise<Material[]> {
+  try {
+    return await apiClient.get<Material[]>('articles');
+  } catch (error) {
+    console.warn('API call failed, using mock materials:', error);
+    return mockMaterials;
+  }
+}
+
+export async function getTaxCodes(): Promise<TaxCode[]> {
+  try {
+    return await apiClient.get<TaxCode[]>('taxcodes');
+  } catch (error) {
 export async function getMaterials(): Promise<Material[]> {
   try {
     return await apiClient.get<Material[]>('articles');
@@ -226,10 +249,64 @@ export async function getExchangeRates(): Promise<ExchangeRate[]> {
   } catch (error) {
     console.warn('API call failed, using mock exchange rates:', error);
     return mockExchangeRates;
-    await apiClient.post('purchase-orders', purchaseOrder);
+  }
+}
+
+export async function createMaterial(material: Omit<Material, 'cid'>): Promise<Material> {
+  try {
+    return await apiClient.post<Material>('articles', material);
   } catch (error) {
     throw new APIError(
-      ERROR_MESSAGES.SAVE_PURCHASE_ORDER,
+      ERROR_MESSAGES.CREATE_MATERIAL,
+      error instanceof APIError ? error.status : 500,
+      error instanceof APIError ? error.statusText : 'Unknown Error',
+      'articles',
+      error
+    );
+  }
+}
+
+export async function createVendor(vendor: Omit<Vendor, 'cid'>): Promise<Vendor> {
+  try {
+    return await apiClient.post<Vendor>('vendors', vendor);
+  } catch (error) {
+    throw new APIError(
+      ERROR_MESSAGES.CREATE_VENDOR,
+      error instanceof APIError ? error.status : 500,
+      error instanceof APIError ? error.statusText : 'Unknown Error',
+      'vendors',
+      error
+    );
+  }
+}
+
+export async function createRecipient(recipient: Omit<Recipient, 'cid'>): Promise<Recipient> {
+  try {
+    return await apiClient.post<Recipient>('recipients', recipient);
+  } catch (error) {
+    throw new APIError(
+      ERROR_MESSAGES.CREATE_RECIPIENT,
+      error instanceof APIError ? error.status : 500,
+      error instanceof APIError ? error.statusText : 'Unknown Error',
+      'recipients',
+      error
+    );
+  }
+}
+
+// New API Functions for Purchase Orders and Delivery Notes
+export async function createPurchaseOrder(
+  order: Omit<PurchaseOrder, 'cid'>,
+  items: Omit<PurchaseOrderItem, 'cid'>[]
+): Promise<{ order: PurchaseOrder; items: PurchaseOrderItem[] }> {
+  try {
+    return await apiClient.post<{ order: PurchaseOrder; items: PurchaseOrderItem[] }>(
+      'purchase-orders', 
+      { order, items }
+    );
+  } catch (error) {
+    throw new APIError(
+      ERROR_MESSAGES.CREATE_PO,
       error instanceof APIError ? error.status : 500,
       error instanceof APIError ? error.statusText : 'Unknown Error',
       'purchase-orders',
@@ -238,12 +315,28 @@ export async function getExchangeRates(): Promise<ExchangeRate[]> {
   }
 }
 
-export async function saveDeliveryNote(deliveryNote: DeliveryNote): Promise<void> {
+export async function createDeliveryNote(
+  note: Omit<DeliveryNote, 'cid'>,
+  items: Omit<DeliveryNoteItem, 'cid'>[]
+): Promise<{ note: DeliveryNote; items: DeliveryNoteItem[] }> {
   try {
-    await apiClient.post('delivery-notes', deliveryNote);
+    // Debug: Log the data being sent
+    console.log('📤 Sending delivery note to API:', {
+      note,
+      items,
+      itemsCount: items.length,
+      noteKeys: Object.keys(note),
+      firstItemKeys: items[0] ? Object.keys(items[0]) : 'no items'
+    });
+
+    return await apiClient.post<{ note: DeliveryNote; items: DeliveryNoteItem[] }>(
+      'delivery-notes', 
+      { note, items }
+    );
   } catch (error) {
+    console.error('❌ API Error creating delivery note:', error);
     throw new APIError(
-      ERROR_MESSAGES.SAVE_DELIVERY_NOTE,
+      ERROR_MESSAGES.CREATE_DN,
       error instanceof APIError ? error.status : 500,
       error instanceof APIError ? error.statusText : 'Unknown Error',
       'delivery-notes',
@@ -252,58 +345,7 @@ export async function saveDeliveryNote(deliveryNote: DeliveryNote): Promise<void
   }
 }
 
-export async function getSavedData(): Promise<{
-  purchaseOrders: PurchaseOrder[];
-  deliveryNotes: DeliveryNote[];
-  lastPONumber?: string;
-  lastDNNumber?: string;
-}> {
-  try {
-    return await apiClient.get<{
-      purchaseOrders: PurchaseOrder[];
-      deliveryNotes: DeliveryNote[];
-      lastPONumber?: string;
-      lastDNNumber?: string;
-    }>('saved-data');
-  } catch (error) {
-    throw new APIError(
-      ERROR_MESSAGES.FETCH_SAVED_DATA,
-      error instanceof APIError ? error.status : 500,
-      error instanceof APIError ? error.statusText : 'Unknown Error',
-      'saved-data',
-      error
-    );
-  }
-}
-
-export async function deletePurchaseOrder(id: string): Promise<void> {
-  try {
-    await apiClient.delete(`purchase-orders/${id}`);
-  } catch (error) {
-    throw new APIError(
-      ERROR_MESSAGES.DELETE_PURCHASE_ORDER,
-      error instanceof APIError ? error.status : 500,
-      error instanceof APIError ? error.statusText : 'Unknown Error',
-      `purchase-orders/${id}`,
-      error
-    );
-  }
-}
-
-export async function deleteDeliveryNote(id: string): Promise<void> {
-  try {
-    await apiClient.delete(`delivery-notes/${id}`);
-  } catch (error) {
-    throw new APIError(
-      ERROR_MESSAGES.DELETE_DELIVERY_NOTE,
-      error instanceof APIError ? error.status : 500,
-      error instanceof APIError ? error.statusText : 'Unknown Error',
-      `delivery-notes/${id}`,
-      error
-    );
-  }
-}
-
+// Funktion zum Abrufen der letzten gespeicherten Daten (inkl. Nummern)
 export async function getLastNumbers(): Promise<{
   lastPONumber: string;
   lastDNNumber: string;
@@ -326,11 +368,3 @@ export async function getLastNumbers(): Promise<{
     };
   } catch (error) {
     console.warn('API call failed, using default numbers:', error);
-    console.warn('API call failed, using default numbers:', error);
-    // Im Fehlerfall Default-Werte zurückgeben
-    return {
-      lastPONumber: '4500000000',
-      lastDNNumber: 'L2BRL0000'
-    };
-  }
-}
