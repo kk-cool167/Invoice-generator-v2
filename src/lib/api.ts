@@ -207,16 +207,6 @@ const API_BASE_URL = `/api/v1`;
 export async function getVendors(): Promise<Vendor[]> {
   try {
     return await apiClient.get<Vendor[]>('vendors');
-  } catch (error) {
-    console.warn('API call failed, using mock vendors:', error);
-    return mockVendors;
-  }
-}
-
-export async function getRecipients(): Promise<Recipient[]> {
-  try {
-    return await apiClient.get<Recipient[]>('recipients');
-  } catch (error) {
     console.warn('API call failed, using mock recipients:', error);
     return mockRecipients;
   }
@@ -225,16 +215,6 @@ export async function getRecipients(): Promise<Recipient[]> {
 export async function getMaterials(): Promise<Material[]> {
   try {
     return await apiClient.get<Material[]>('articles');
-  } catch (error) {
-    console.warn('API call failed, using mock materials:', error);
-    return mockMaterials;
-  }
-}
-
-export async function getTaxCodes(): Promise<TaxCode[]> {
-  try {
-    return await apiClient.get<TaxCode[]>('taxcodes');
-  } catch (error) {
     console.warn('API call failed, using mock tax codes:', error);
     return mockTaxCodes;
   }
@@ -246,11 +226,6 @@ export async function getExchangeRates(): Promise<ExchangeRate[]> {
   } catch (error) {
     console.warn('API call failed, using mock exchange rates:', error);
     return mockExchangeRates;
-  }
-}
-
-export async function savePurchaseOrder(purchaseOrder: PurchaseOrder): Promise<void> {
-  try {
     await apiClient.post('purchase-orders', purchaseOrder);
   } catch (error) {
     throw new APIError(
@@ -350,6 +325,7 @@ export async function getLastNumbers(): Promise<{
       lastDNNumber
     };
   } catch (error) {
+    console.warn('API call failed, using default numbers:', error);
     console.warn('API call failed, using default numbers:', error);
     // Im Fehlerfall Default-Werte zurückgeben
     return {
