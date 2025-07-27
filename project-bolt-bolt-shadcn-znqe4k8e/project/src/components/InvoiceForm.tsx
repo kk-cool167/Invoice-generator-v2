@@ -36,6 +36,10 @@ import { LoadingSpinner } from './ui/loading-spinner';
 import useToast from './ui/toast';
 import useAutoSave from '@/hooks/useAutoSave';
 import { createStandardToastHandlers, ErrorTypes } from '../lib/errorHandling';
+import { DemoDataFiller } from './DemoDataFiller';
+import { Building2, UserPlus, History, Package, FileText, Eye, Settings, Sparkles } from 'lucide-react';
+import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 const INITIAL_ORDER_NUMBER = 4500000000;
 const INITIAL_DELIVERY_NOTE_NUMBER = 1;
@@ -610,67 +614,163 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
     );
   }
 
-  // Show error state with detailed information
-
-  /*
-  if (hasError) {
-    const failedServices = Object.entries(errorDetails)
-      .filter(([, error]) => error)
-      .map(([service]) => service);
-
-    return (
-      <div className="p-8 text-center">
-        <h3 className="text-lg font-semibold text-red-600 mb-4">
-          {t('errors.load.title')}
-        </h3>
-        <div className="space-y-3">
-          <p className="text-gray-600">
-            {t('errors.load.message')}
-          </p>
-          {failedServices.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm font-medium text-red-800 mb-2">
-                Failed to load:
-              </p>
-              <ul className="text-sm text-red-700 space-y-1">
-                {failedServices.map(service => (
-                  <li key={service}>• {service}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <button 
-            onClick={() => window.location.reload()} 
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  */
-
   return (
     <FormProvider {...methods}>
-      <div className="p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <form onSubmit={methods.handleSubmit(() => {})}>
-          <div className="min-h-screen px-2 space-y-4">
-            
-            {/* Main Layout: Fixed Left Sidebar + Right Main Area */}
-            <div className="flex gap-4 min-h-screen">
+          
+          {/* Modern Header */}
+          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-2xl">
+            <div className="max-w-7xl mx-auto px-6 py-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-6">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+                    <FileText className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold text-white mb-2">Invoice Generator</h1>
+                    <p className="text-indigo-100 text-lg">Create professional invoices with ease</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-6">
+                  {/* Mode Selection */}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                    <div className="text-sm text-white/80 mb-2 font-medium">Mode</div>
+                    <div className="flex space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setMode('MM')}
+                        className={`px-6 py-2 rounded-xl font-semibold transition-all duration-300 ${
+                          mode === 'MM' 
+                            ? 'bg-white text-indigo-600 shadow-lg transform scale-105' 
+                            : 'bg-white/20 text-white hover:bg-white/30 hover:scale-105'
+                        }`}
+                      >
+                        MM
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMode('FI')}
+                        className={`px-6 py-2 rounded-xl font-semibold transition-all duration-300 ${
+                          mode === 'FI' 
+                            ? 'bg-white text-indigo-600 shadow-lg transform scale-105' 
+                            : 'bg-white/20 text-white hover:bg-white/30 hover:scale-105'
+                        }`}
+                      >
+                        FI
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Template Selection */}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                    <div className="text-sm text-white/80 mb-2 font-medium">Template</div>
+                    <Select value={template} onValueChange={(value) => setTemplate(value as TemplateName)}>
+                      <SelectTrigger className="w-48 bg-white/20 border-white/30 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="businessstandard">Business Standard</SelectItem>
+                        <SelectItem value="classic">Classic</SelectItem>
+                        <SelectItem value="professional">Professional</SelectItem>
+                        <SelectItem value="businessgreen">Business Green</SelectItem>
+                        <SelectItem value="allrauer2">Allrauer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="flex space-x-3">
+                    <Button
+                      type="button"
+                      onClick={() => setIsVersionsModalOpen(true)}
+                      className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm"
+                      size="sm"
+                    >
+                      <History className="h-4 w-4 mr-2" />
+                      Versions
+                    </Button>
+                    <DemoDataFiller
+                      mode={mode}
+                      vendors={vendors}
+                      recipients={recipients}
+                      materials={materials}
+                      currentVendorId={methods.watch('vendorId')}
+                      currentRecipientId={methods.watch('recipientId')}
+                      onFillData={handleFillDemoData}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="grid grid-cols-12 gap-8">
               
-              {/* Fixed Left Sidebar: Wizard + Help (240px width für bessere Nutzung) */}
-              <div className="w-60 flex-shrink-0">
-                <div className="sticky top-4 space-y-4">
-                  <EnhancedStepsProgress
-                    completedSteps={stepTracking.completedSteps}
-                    currentStep={stepTracking.currentStep || undefined}
-                    orientation="vertical"
-                  />
-                  
-                  {/* Help Panel direkt unter Wizard */}
+              {/* Left Sidebar - Progress & Navigation */}
+              <div className="col-span-3">
+                <div className="sticky top-8 space-y-6">
+                  {/* Progress Card */}
+                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-gray-100">
+                      <h3 className="font-bold text-gray-900 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+                          <Settings className="h-4 w-4 text-white" />
+                        </div>
+                        Progress
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <EnhancedStepsProgress
+                        completedSteps={stepTracking.completedSteps}
+                        currentStep={stepTracking.currentStep || undefined}
+                        orientation="vertical"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick Actions Card */}
+                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-100">
+                      <h3 className="font-bold text-gray-900 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                          <Sparkles className="h-4 w-4 text-white" />
+                        </div>
+                        Quick Actions
+                      </h3>
+                    </div>
+                    <div className="p-6 space-y-3">
+                      <Button
+                        type="button"
+                        onClick={() => setIsVendorModalOpen(true)}
+                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                      >
+                        <Building2 className="h-4 w-4 mr-2" />
+                        Add Vendor
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setIsCreditorModalOpen(true)}
+                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Recipient
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setIsBulkMaterialModalOpen(true)}
+                        className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                      >
+                        <Package className="h-4 w-4 mr-2" />
+                        Add Materials
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Help Panel */}
                   {!isHelpCollapsed && (
                     <ContextualHelpPanel
                       currentStep={stepTracking.currentStep || 'mode'}
@@ -679,86 +779,85 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                       onToggleCollapse={() => setIsHelpCollapsed(!isHelpCollapsed)}
                     />
                   )}
-                  
-                  {/* Collapsed Help Toggle */}
-                  {isHelpCollapsed && (
-                    <button
-                      onClick={() => setIsHelpCollapsed(false)}
-                      className="w-full bg-gradient-to-br from-purple-500 to-purple-700 text-white p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-                      title="Hilfe anzeigen"
-                    >
-                      <svg className="h-5 w-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                    </button>
-                  )}
                 </div>
               </div>
 
-              {/* Right Main Area: Shared Toolbar + 3 Columns für optimale Viewport-Nutzung */}
-              <div className="flex-1 space-y-4">
+              {/* Main Content Area */}
+              <div className="col-span-6 space-y-8">
                 
-                {/* Shared Toolbar (full width above both columns) */}
-                <InvoiceFormHeader
-                  mode={mode}
-                  setMode={setMode}
-                  template={template}
-                  setTemplate={setTemplate}
-                  setIsVendorModalOpen={setIsVendorModalOpen}
-                  setIsCreditorModalOpen={setIsCreditorModalOpen}
-                  setIsBulkMaterialModalOpen={setIsBulkMaterialModalOpen}
-                  setIsVersionsModalOpen={setIsVersionsModalOpen}
-                  setIsConfirmDialogOpen={setIsConfirmDialogOpen}
-                  vendors={vendors}
-                  recipients={recipients}
-                  materials={materials}
-                  currentVendorId={methods.watch('vendorId')}
-                  currentRecipientId={methods.watch('recipientId')}
-                  onFillData={handleFillDemoData}
-                />
+                {/* Invoice Details Card */}
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+                        <FileText className="h-4 w-4 text-white" />
+                      </div>
+                      Invoice Details
+                    </h2>
+                  </div>
+                  <div className="p-6">
+                    <InvoiceBasicInfo mode={mode} vendors={vendors} recipients={recipients} />
+                  </div>
+                </div>
 
-                {/* Main Content: 3 Columns für bessere Viewport-Nutzung */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  
-                  {/* Column 1: Configuration + Basic Info */}
-                  <div className="space-y-4">
-                    {/* Configuration Section */}
-                    <div className="bg-white backdrop-blur-sm rounded-2xl shadow-xl shadow-purple-500/20 border-2 border-purple-300/60 p-4 hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-300">
-                      <h3 className="font-semibold text-gray-900 flex items-center text-base mb-4 tracking-tight">
-                        <div className="w-8 h-8 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-600 rounded-xl flex items-center justify-center mr-3 shadow-lg shadow-purple-500/30">
+                {/* Logo Configuration Card */}
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-100">
+                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                      </div>
+                      Logo & Branding
+                    </h2>
+                  </div>
+                  <div className="p-6">
+                    <LogoUpload 
+                      onSuccess={(selectedLogo) => {
+                        setLogo(selectedLogo);
+                        const defaultConfig = {
+                          maxWidth: 200,
+                          maxHeight: 60,
+                          alignment: 'right'
+                        };
+                        setLogoConfig(defaultConfig);
+                      }}
+                      onDialogChange={setIsLogoDialogOpen}
+                      onLogoConfigChange={setLogoConfig}
+                    />
+                  </div>
+                </div>
+
+                {/* Items Section */}
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
                           <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                           </svg>
                         </div>
-                        Logo
-                      </h3>
-                      
-                      <div className="space-y-4">
-                        {/* Logo Upload */}
-                        <LogoUpload 
-                          onSuccess={(selectedLogo) => {
-                            setLogo(selectedLogo);
-                            const defaultConfig = {
-                              maxWidth: 200,
-                              maxHeight: 60,
-                              alignment: 'right'
-                            };
-                            setLogoConfig(defaultConfig);
-                          }}
-                          onDialogChange={setIsLogoDialogOpen}
-                          onLogoConfigChange={setLogoConfig}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Basic Information - 2-spaltig innerhalb */}
-                    <div className="bg-white backdrop-blur-sm rounded-2xl shadow-xl shadow-purple-500/20 border-2 border-purple-300/60 p-4 hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-300">
-                      <InvoiceBasicInfo mode={mode} vendors={vendors} recipients={recipients} />
+                        Invoice Items
+                      </h2>
+                      {mode === 'MM' && (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="sync-materials"
+                            checked={syncMaterials}
+                            onChange={(e) => setSyncMaterials(e.target.checked)}
+                            className="rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+                          />
+                          <label htmlFor="sync-materials" className="text-sm font-medium text-gray-700">
+                            Sync Materials
+                          </label>
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  {/* Column 2: Items */}
-                  <div>
+                  <div className="p-6">
                     <InvoiceFormContent
                       mode={mode}
                       syncMaterials={syncMaterials}
@@ -792,10 +891,22 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                       handleCreateMMDocument={handleCreateMMDocument}
                     />
                   </div>
+                </div>
+              </div>
 
-                  {/* Column 3: PDF Preview & Actions */}
-                  <div>
-                    <div className="sticky top-24">
+              {/* Right Sidebar - PDF Preview */}
+              <div className="col-span-3">
+                <div className="sticky top-8">
+                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-gray-100">
+                      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
+                          <Eye className="h-4 w-4 text-white" />
+                        </div>
+                        PDF Preview
+                      </h2>
+                    </div>
+                    <div className="p-6">
                       <InvoiceFormActions
                         mode={mode}
                         template={template}
@@ -813,10 +924,9 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                       />
                     </div>
                   </div>
-                  
                 </div>
               </div>
-            </div> 
+            </div>
           </div>
         </form>
 
