@@ -110,8 +110,6 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
   const [mode, setMode] = useState<'MM' | 'FI'>('MM');
   const [template, setTemplate] = useState<TemplateName>('businessstandard');
   const [activeTab, setActiveTab] = useState('basic');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Items state
   const [invoiceItems, setInvoiceItems] = useState<MMItem[]>([defaultMMItem]);
@@ -343,24 +341,25 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
     <FormProvider {...methods}>
       <div className="min-h-screen bg-gray-50">
         
-        {/* Clean Top Toolbar */}
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
+        {/* Simple Top Toolbar */}
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
               
-              {/* Left: Logo & Title */}
-              <div className="flex items-center space-x-4">
+              {/* Left: Title */}
+              <div className="flex items-center space-x-3">
                 <div className="bg-purple-600 p-2 rounded-lg">
                   <FileText className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-semibold text-gray-900">Invoice Generator</h1>
-                  <p className="text-xs text-gray-500 hidden sm:block">Professional invoice creation</p>
+                  <h1 className="text-xl font-semibold text-gray-900">Invoice Generator</h1>
+                  <p className="text-sm text-gray-500">Create professional invoices</p>
                 </div>
               </div>
 
-              {/* Center: Mode & Template (Desktop) */}
-              <div className="hidden md:flex items-center space-x-6">
+              {/* Right: Controls */}
+              <div className="flex items-center space-x-4">
+                {/* Mode Toggle */}
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium text-gray-700">Mode:</span>
                   <div className="flex bg-gray-100 rounded-lg p-1">
@@ -389,6 +388,7 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                   </div>
                 </div>
 
+                {/* Template Select */}
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium text-gray-700">Template:</span>
                   <Select value={template} onValueChange={(value) => setTemplate(value as TemplateName)}>
@@ -404,22 +404,8 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
 
-              {/* Right: Actions */}
-              <div className="flex items-center space-x-3">
-                {/* Language Switch */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setLanguage(currentLanguage === 'en' ? 'de' : 'en')}
-                  className="hidden sm:flex"
-                >
-                  <Globe className="h-4 w-4 mr-1" />
-                  {currentLanguage.toUpperCase()}
-                </Button>
-
-                {/* Demo Data */}
+                {/* Actions */}
                 <DemoDataFiller
                   mode={mode}
                   vendors={vendors}
@@ -430,457 +416,304 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                   onFillData={handleFillDemoData}
                 />
 
-                {/* Versions */}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setIsVersionsModalOpen(true)}
-                  className="hidden sm:flex"
                 >
                   <History className="h-4 w-4 mr-1" />
                   Versions
                 </Button>
 
-                {/* Mobile Menu */}
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="md:hidden"
+                  onClick={() => setLanguage(currentLanguage === 'en' ? 'de' : 'en')}
                 >
-                  {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                  <Globe className="h-4 w-4 mr-1" />
+                  {currentLanguage.toUpperCase()}
                 </Button>
               </div>
             </div>
-
-            {/* Mobile Menu Dropdown */}
-            {isMobileMenuOpen && (
-              <div className="md:hidden border-t border-gray-200 py-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Mode:</span>
-                  <div className="flex bg-gray-100 rounded-lg p-1">
-                    <button
-                      type="button"
-                      onClick={() => setMode('MM')}
-                      className={`px-3 py-1 text-sm font-medium rounded-md ${
-                        mode === 'MM' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
-                      }`}
-                    >
-                      MM
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMode('FI')}
-                      className={`px-3 py-1 text-sm font-medium rounded-md ${
-                        mode === 'FI' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
-                      }`}
-                    >
-                      FI
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Template:</span>
-                  <Select value={template} onValueChange={(value) => setTemplate(value as TemplateName)}>
-                    <SelectTrigger className="w-40 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="businessstandard">Business Standard</SelectItem>
-                      <SelectItem value="classic">Classic</SelectItem>
-                      <SelectItem value="professional">Professional</SelectItem>
-                      <SelectItem value="businessgreen">Business Green</SelectItem>
-                      <SelectItem value="allrauer2">Allrauer</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex">
+        <div className="max-w-7xl mx-auto px-6 py-8">
           
-          {/* Slim Step Sidebar */}
-          <div className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 transition-all duration-300 hidden lg:block`}>
-            <div className="p-4">
-              
-              {/* Collapse Toggle */}
-              <div className="flex items-center justify-between mb-6">
-                {!isSidebarCollapsed && (
-                  <h3 className="text-sm font-semibold text-gray-900">Progress</h3>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                  className="p-1"
-                >
-                  {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                </Button>
-              </div>
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsTrigger value="basic" className="flex items-center space-x-2">
+                <FileText className="h-4 w-4" />
+                <span>Basic Info</span>
+              </TabsTrigger>
+              <TabsTrigger value="items" className="flex items-center space-x-2">
+                <Package className="h-4 w-4" />
+                <span>Items</span>
+              </TabsTrigger>
+              <TabsTrigger value="preview" className="flex items-center space-x-2">
+                <Eye className="h-4 w-4" />
+                <span>Preview</span>
+              </TabsTrigger>
+            </TabsList>
 
-              {/* Step Navigation */}
-              <div className="space-y-2">
-                {[
-                  { id: 'basic', label: 'Basic Info', icon: FileText, completed: stepTracking.isStepCompleted('data') },
-                  { id: 'items', label: 'Items', icon: Package, completed: stepTracking.isStepCompleted('items') },
-                  { id: 'preview', label: 'Preview', icon: Eye, completed: stepTracking.isStepCompleted('preview') }
-                ].map((step, index) => (
-                  <button
-                    key={step.id}
-                    onClick={() => setActiveTab(step.id)}
-                    className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                      activeTab === step.id
-                        ? 'bg-purple-50 text-purple-700 border border-purple-200'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                    title={isSidebarCollapsed ? step.label : undefined}
-                  >
-                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                      step.completed
-                        ? 'bg-green-500 text-white'
-                        : activeTab === step.id
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-200 text-gray-600'
-                    }`}>
-                      {step.completed ? '✓' : index + 1}
-                    </div>
-                    {!isSidebarCollapsed && (
-                      <span className="text-sm font-medium">{step.label}</span>
-                    )}
-                  </button>
-                ))}
+            {/* Basic Info Tab */}
+            <TabsContent value="basic" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Invoice Details */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <FileText className="h-5 w-5 text-purple-600" />
+                      <span>Invoice Details</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <InvoiceBasicInfo mode={mode} vendors={vendors} recipients={recipients} />
+                  </CardContent>
+                </Card>
+
+                {/* Logo & Branding */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Settings className="h-5 w-5 text-purple-600" />
+                      <span>Logo & Branding</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <LogoUpload 
+                      onSuccess={(selectedLogo) => {
+                        setLogo(selectedLogo);
+                        setLogoConfig({
+                          maxWidth: 200,
+                          maxHeight: 60,
+                          alignment: 'right'
+                        });
+                      }}
+                      onDialogChange={setIsLogoDialogOpen}
+                      onLogoConfigChange={setLogoConfig}
+                    />
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Quick Actions */}
-              {!isSidebarCollapsed && (
-                <div className="mt-8">
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</h4>
-                  <div className="space-y-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={() => setIsVendorModalOpen(true)}
-                      className="w-full justify-start"
+                      className="flex items-center space-x-2"
                     >
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Add Vendor
+                      <Building2 className="h-4 w-4" />
+                      <span>Add Vendor</span>
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={() => setIsCreditorModalOpen(true)}
-                      className="w-full justify-start"
+                      className="flex items-center space-x-2"
                     >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Add Recipient
+                      <UserPlus className="h-4 w-4" />
+                      <span>Add Recipient</span>
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={() => setIsBulkMaterialModalOpen(true)}
-                      className="w-full justify-start"
+                      className="flex items-center space-x-2"
                     >
-                      <Package className="h-4 w-4 mr-2" />
-                      Add Materials
+                      <Package className="h-4 w-4" />
+                      <span>Add Materials</span>
                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Items Tab */}
+            <TabsContent value="items" className="space-y-6">
+              {mode === 'MM' && (
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900">Invoice Items</h2>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="sync-materials"
+                      checked={syncMaterials}
+                      onChange={(e) => setSyncMaterials(e.target.checked)}
+                      className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                    />
+                    <label htmlFor="sync-materials" className="text-sm text-gray-700">
+                      Sync Materials
+                    </label>
                   </div>
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Main Content Area */}
-          <div className="flex-1 p-4 sm:p-6 lg:p-8">
-            
-            {/* Mobile Step Bar */}
-            <div className="lg:hidden mb-6">
-              <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-4">
-                {[
-                  { id: 'basic', label: 'Basic', icon: FileText },
-                  { id: 'items', label: 'Items', icon: Package },
-                  { id: 'preview', label: 'Preview', icon: Eye }
-                ].map((step, index) => (
-                  <button
-                    key={step.id}
-                    onClick={() => setActiveTab(step.id)}
-                    className={`flex flex-col items-center space-y-1 px-4 py-2 rounded-lg transition-colors ${
-                      activeTab === step.id
-                        ? 'bg-purple-50 text-purple-700'
-                        : 'text-gray-600'
-                    }`}
-                  >
-                    <step.icon className="h-5 w-5" />
-                    <span className="text-xs font-medium">{step.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Tab Content */}
-            <div className="space-y-6">
-              
-              {/* Basic Info Tab */}
-              {activeTab === 'basic' && (
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <FileText className="h-5 w-5 text-purple-600" />
-                        <span>Invoice Details</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <InvoiceBasicInfo mode={mode} vendors={vendors} recipients={recipients} />
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <Settings className="h-5 w-5 text-purple-600" />
-                        <span>Logo & Branding</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <LogoUpload 
-                        onSuccess={(selectedLogo) => {
-                          setLogo(selectedLogo);
-                          setLogoConfig({
-                            maxWidth: 200,
-                            maxHeight: 60,
-                            alignment: 'right'
-                          });
-                        }}
-                        onDialogChange={setIsLogoDialogOpen}
-                        onLogoConfigChange={setLogoConfig}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* Items Tab */}
-              {activeTab === 'items' && (
-                <div className="space-y-6">
-                  {mode === 'MM' && (
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-xl font-semibold text-gray-900">Invoice Items</h2>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="sync-materials"
-                          checked={syncMaterials}
-                          onChange={(e) => setSyncMaterials(e.target.checked)}
-                          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                        />
-                        <label htmlFor="sync-materials" className="text-sm text-gray-700">
-                          Sync Materials
-                        </label>
-                      </div>
-                    </div>
-                  )}
-
-                  {mode === 'FI' ? (
-                    <FIItemsSection
-                      items={fiItems}
+              {mode === 'FI' ? (
+                <FIItemsSection
+                  items={fiItems}
+                  materials={filteredMaterials}
+                  getTaxCodeInfo={getTaxCodeInfo}
+                  onAddItem={() => setFIItems([...fiItems, defaultFIItem])}
+                  onRemoveItem={(index) => setFIItems(fiItems.filter((_, i) => i !== index))}
+                  onUpdateItem={(index, item) => {
+                    const newItems = [...fiItems];
+                    newItems[index] = item as FIItem;
+                    setFIItems(newItems);
+                  }}
+                />
+              ) : (
+                <Tabs defaultValue="invoice" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="invoice">Invoice Items</TabsTrigger>
+                    <TabsTrigger value="order">Order Items</TabsTrigger>
+                    <TabsTrigger value="delivery">Delivery Items</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="invoice" className="mt-6">
+                    <MMItemsSection
+                      title="Invoice Items"
+                      items={invoiceItems}
                       materials={filteredMaterials}
-                      getTaxCodeInfo={getTaxCodeInfo}
-                      onAddItem={() => setFIItems([...fiItems, defaultFIItem])}
-                      onRemoveItem={(index) => setFIItems(fiItems.filter((_, i) => i !== index))}
+                      onAddItem={() => setInvoiceItems([...invoiceItems, defaultMMItem])}
+                      onRemoveItem={(index) => setInvoiceItems(invoiceItems.filter((_, i) => i !== index))}
                       onUpdateItem={(index, item) => {
-                        const newItems = [...fiItems];
-                        newItems[index] = item as FIItem;
-                        setFIItems(newItems);
+                        const newItems = [...invoiceItems];
+                        newItems[index] = item;
+                        setInvoiceItems(newItems);
+                      }}
+                      onMaterialSelect={(materialId, index) => {
+                        const material = filteredMaterials.find(m => m.cid.toString() === materialId);
+                        if (material) {
+                          const newItems = [...invoiceItems];
+                          newItems[index] = {
+                            ...newItems[index],
+                            materialId,
+                            price: material.cnetamount || 0,
+                            unit: material.cunit || 'ST',
+                            taxRate: Math.round((material.ctaxrate || 0.19) * 100),
+                          };
+                          setInvoiceItems(newItems);
+                        }
                       }}
                     />
-                  ) : (
-                    <Tabs defaultValue="invoice" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="invoice">Invoice Items</TabsTrigger>
-                        <TabsTrigger value="order">Order Items</TabsTrigger>
-                        <TabsTrigger value="delivery">Delivery Items</TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="invoice" className="mt-6">
-                        <MMItemsSection
-                          title="Invoice Items"
-                          items={invoiceItems}
-                          materials={filteredMaterials}
-                          onAddItem={() => setInvoiceItems([...invoiceItems, defaultMMItem])}
-                          onRemoveItem={(index) => setInvoiceItems(invoiceItems.filter((_, i) => i !== index))}
-                          onUpdateItem={(index, item) => {
-                            const newItems = [...invoiceItems];
-                            newItems[index] = item;
-                            setInvoiceItems(newItems);
-                          }}
-                          onMaterialSelect={(materialId, index) => {
-                            const material = filteredMaterials.find(m => m.cid.toString() === materialId);
-                            if (material) {
-                              const newItems = [...invoiceItems];
-                              newItems[index] = {
-                                ...newItems[index],
-                                materialId,
-                                price: material.cnetamount || 0,
-                                unit: material.cunit || 'ST',
-                                taxRate: Math.round((material.ctaxrate || 0.19) * 100),
-                              };
-                              setInvoiceItems(newItems);
-                            }
-                          }}
-                        />
-                      </TabsContent>
-                      
-                      <TabsContent value="order" className="mt-6">
-                        <MMItemsSection
-                          title="Order Items"
-                          items={orderItems}
-                          materials={filteredMaterials}
-                          onAddItem={() => setOrderItems([...orderItems, defaultMMItem])}
-                          onRemoveItem={(index) => setOrderItems(orderItems.filter((_, i) => i !== index))}
-                          onUpdateItem={(index, item) => {
-                            const newItems = [...orderItems];
-                            newItems[index] = item;
-                            setOrderItems(newItems);
-                          }}
-                          onMaterialSelect={(materialId, index) => {
-                            const material = filteredMaterials.find(m => m.cid.toString() === materialId);
-                            if (material) {
-                              const newItems = [...orderItems];
-                              newItems[index] = {
-                                ...newItems[index],
-                                materialId,
-                                price: material.cnetamount || 0,
-                                unit: material.cunit || 'ST',
-                                taxRate: Math.round((material.ctaxrate || 0.19) * 100),
-                              };
-                              setOrderItems(newItems);
-                            }
-                          }}
-                        />
-                      </TabsContent>
-                      
-                      <TabsContent value="delivery" className="mt-6">
-                        <MMItemsSection
-                          title="Delivery Items"
-                          items={deliveryItems}
-                          materials={filteredMaterials}
-                          onAddItem={() => setDeliveryItems([...deliveryItems, defaultMMItem])}
-                          onRemoveItem={(index) => setDeliveryItems(deliveryItems.filter((_, i) => i !== index))}
-                          onUpdateItem={(index, item) => {
-                            const newItems = [...deliveryItems];
-                            newItems[index] = item;
-                            setDeliveryItems(newItems);
-                          }}
-                          onMaterialSelect={(materialId, index) => {
-                            const material = filteredMaterials.find(m => m.cid.toString() === materialId);
-                            if (material) {
-                              const newItems = [...deliveryItems];
-                              newItems[index] = {
-                                ...newItems[index],
-                                materialId,
-                                price: material.cnetamount || 0,
-                                unit: material.cunit || 'ST',
-                                taxRate: Math.round((material.ctaxrate || 0.19) * 100),
-                              };
-                              setDeliveryItems(newItems);
-                            }
-                          }}
-                        />
-                      </TabsContent>
-                    </Tabs>
-                  )}
-                </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="order" className="mt-6">
+                    <MMItemsSection
+                      title="Order Items"
+                      items={orderItems}
+                      materials={filteredMaterials}
+                      onAddItem={() => setOrderItems([...orderItems, defaultMMItem])}
+                      onRemoveItem={(index) => setOrderItems(orderItems.filter((_, i) => i !== index))}
+                      onUpdateItem={(index, item) => {
+                        const newItems = [...orderItems];
+                        newItems[index] = item;
+                        setOrderItems(newItems);
+                      }}
+                      onMaterialSelect={(materialId, index) => {
+                        const material = filteredMaterials.find(m => m.cid.toString() === materialId);
+                        if (material) {
+                          const newItems = [...orderItems];
+                          newItems[index] = {
+                            ...newItems[index],
+                            materialId,
+                            price: material.cnetamount || 0,
+                            unit: material.cunit || 'ST',
+                            taxRate: Math.round((material.ctaxrate || 0.19) * 100),
+                          };
+                          setOrderItems(newItems);
+                        }
+                      }}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="delivery" className="mt-6">
+                    <MMItemsSection
+                      title="Delivery Items"
+                      items={deliveryItems}
+                      materials={filteredMaterials}
+                      onAddItem={() => setDeliveryItems([...deliveryItems, defaultMMItem])}
+                      onRemoveItem={(index) => setDeliveryItems(deliveryItems.filter((_, i) => i !== index))}
+                      onUpdateItem={(index, item) => {
+                        const newItems = [...deliveryItems];
+                        newItems[index] = item;
+                        setDeliveryItems(newItems);
+                      }}
+                      onMaterialSelect={(materialId, index) => {
+                        const material = filteredMaterials.find(m => m.cid.toString() === materialId);
+                        if (material) {
+                          const newItems = [...deliveryItems];
+                          newItems[index] = {
+                            ...newItems[index],
+                            materialId,
+                            price: material.cnetamount || 0,
+                            unit: material.cunit || 'ST',
+                            taxRate: Math.round((material.ctaxrate || 0.19) * 100),
+                          };
+                          setDeliveryItems(newItems);
+                        }
+                      }}
+                    />
+                  </TabsContent>
+                </Tabs>
               )}
+            </TabsContent>
 
-              {/* Preview Tab */}
-              {activeTab === 'preview' && (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">PDF Preview</h2>
-                    <div className="flex items-center space-x-3">
+            {/* Preview Tab */}
+            <TabsContent value="preview" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">PDF Preview</h2>
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={handlePreviewPDF}
+                    disabled={isPreviewLoading}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    {isPreviewLoading ? 'Generating...' : 'Generate Preview'}
+                  </Button>
+                  {pdfBlob && (
+                    <>
                       <Button
                         variant="outline"
-                        onClick={handlePreviewPDF}
-                        disabled={isPreviewLoading}
+                        onClick={handleDownloadXML}
                       >
-                        <Eye className="h-4 w-4 mr-2" />
-                        {isPreviewLoading ? 'Generating...' : 'Generate Preview'}
+                        <FileText className="h-4 w-4 mr-2" />
+                        Download XML
                       </Button>
-                      {pdfBlob && (
-                        <>
-                          <Button
-                            variant="outline"
-                            onClick={handleDownloadXML}
-                          >
-                            <FileText className="h-4 w-4 mr-2" />
-                            Download XML
-                          </Button>
-                          <Button onClick={handleDownloadPDF}>
-                            <Download className="h-4 w-4 mr-2" />
-                            Download PDF
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <PDFViewer
-                    pdfBlob={pdfBlob}
-                    templateName={template}
-                    title="PDF Preview"
-                    showControls={true}
-                    onPreviewPDF={handlePreviewPDF}
-                    onDownloadPDF={handleDownloadPDF}
-                    onDownloadXML={handleDownloadXML}
-                    isPreviewLoading={isPreviewLoading}
-                    hasPreviewDocument={!!previewDocument}
-                    mode={mode}
-                    canGenerateActions={!!methods.getValues('vendorId') && !!methods.getValues('recipientId')}
-                    className="w-full"
-                  />
+                      <Button onClick={handleDownloadPDF}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Download PDF
+                      </Button>
+                    </>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
+              </div>
 
-        {/* Sticky Mobile Footer */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-10">
-          <div className="flex items-center justify-between space-x-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => saveForm()}
-              disabled={isSaving}
-            >
-              <Save className="h-4 w-4 mr-1" />
-              {isSaving ? 'Saving...' : 'Save'}
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePreviewPDF}
-              disabled={isPreviewLoading}
-            >
-              <Eye className="h-4 w-4 mr-1" />
-              Preview
-            </Button>
-            
-            {pdfBlob && (
-              <Button
-                size="sm"
-                onClick={handleDownloadPDF}
-              >
-                <Download className="h-4 w-4 mr-1" />
-                Download
-              </Button>
-            )}
-          </div>
+              <PDFViewer
+                pdfBlob={pdfBlob}
+                templateName={template}
+                title="PDF Preview"
+                showControls={true}
+                onPreviewPDF={handlePreviewPDF}
+                onDownloadPDF={handleDownloadPDF}
+                onDownloadXML={handleDownloadXML}
+                isPreviewLoading={isPreviewLoading}
+                hasPreviewDocument={!!previewDocument}
+                mode={mode}
+                canGenerateActions={!!methods.getValues('vendorId') && !!methods.getValues('recipientId')}
+                className="w-full"
+              />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* All Modal Dialogs */}
