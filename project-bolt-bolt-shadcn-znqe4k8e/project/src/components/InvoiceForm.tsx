@@ -611,6 +611,8 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
   }
 
   // Show error state with detailed information
+
+  /*
   if (hasError) {
     const failedServices = Object.entries(errorDetails)
       .filter(([, error]) => error)
@@ -647,6 +649,8 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
       </div>
     );
   }
+
+  */
 
   return (
     <FormProvider {...methods}>
