@@ -43,7 +43,6 @@
     "express": "^4.21.2",
     "framer-motion": "^12.4.10",
     "gsap": "^3.13.0",
-    "isomorphic-fetch": "^3.0.0",
     "lucide-react": "^0.358.0",
     "pdfjs-dist": "^4.8.69",
     "pg": "^8.13.3",
