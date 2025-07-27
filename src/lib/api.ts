@@ -235,6 +235,8 @@ export async function getTaxCodes(): Promise<TaxCode[]> {
   try {
     return await apiClient.get<TaxCode[]>('taxcodes');
   } catch (error) {
+  }
+}
 export async function getMaterials(): Promise<Material[]> {
   try {
     return await apiClient.get<Material[]>('articles');
@@ -368,3 +370,5 @@ export async function getLastNumbers(): Promise<{
     };
   } catch (error) {
     console.warn('API call failed, using default numbers:', error);
+  }
+}
