@@ -32,7 +32,7 @@ import { DemoDataFiller } from './DemoDataFiller';
 
 // UI Components
 import { LoadingSpinner } from './ui/loading-spinner';
-import useToast from './ui/toast';
+import { useToast } from './ui/toast';
 import useAutoSave from '@/hooks/useAutoSave';
 import { createStandardToastHandlers, ErrorTypes } from '../lib/errorHandling';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -70,7 +70,7 @@ interface InvoiceFormProps {
 export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element {
   const queryClient = useQueryClient();
   const { t, currentLanguage, setLanguage } = useLanguage();
-  const { showToast, ToastContainer: toastContainer } = useToast();
+  const { showToast, ToastContainer } = useToast();
   const standardToast = createStandardToastHandlers(showToast, t);
 
   // React Hook Form Setup
@@ -159,7 +159,8 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
     lastSaved,
     saveNamed,
     deleteVersion,
-    renameVersion
+    renameVersion,
+    isSaving
   } = useAutoSave({
     data: formData,
     key: 'invoice_form',
@@ -264,6 +265,36 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
     }
   }, [pdfBlob]);
 
+  const handleDownloadXML = useCallback(() => {
+    try {
+      const formData = methods.getValues();
+      const currentVendor = vendors.find(v => v.cid?.toString() === formData.vendorId);
+      const currentRecipient = recipients.find(r => r.cid?.toString() === formData.recipientId);
+
+      if (!currentVendor || !currentRecipient) {
+        throw new Error('Vendor and recipient must be selected');
+      }
+
+      const xmlData = {
+        invoiceNumber: formData.invoiceNumber,
+        invoiceDate: formData.invoiceDate,
+        customerNumber: formData.customerNumber,
+        vendor: currentVendor,
+        recipient: currentRecipient,
+        items: mode === 'FI' ? fiItems : invoiceItems,
+        mode
+      };
+
+      const xmlContent = generateInvoiceXML(xmlData);
+      downloadXML(xmlContent, `invoice-${formData.invoiceNumber || 'export'}.xml`);
+      
+      standardToast.showSuccess('xml.generated', 'XML file downloaded successfully');
+    } catch (error) {
+      console.error('Error generating XML:', error);
+      standardToast.showError(ErrorTypes.XML_GENERATION_ERROR, error);
+    }
+  }, [methods, vendors, recipients, fiItems, invoiceItems, mode, standardToast]);
+
   const handleFillDemoData = (data: any) => {
     if (data.basicInfo) {
       Object.keys(data.basicInfo).forEach(key => {
@@ -312,7 +343,7 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
     <FormProvider {...methods}>
       <div className="min-h-screen bg-gray-50">
         
-        {/* Top Toolbar */}
+        {/* Clean Top Toolbar */}
         <div className="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -328,7 +359,7 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                 </div>
               </div>
 
-              {/* Center: Mode Toggle (Desktop) */}
+              {/* Center: Mode & Template (Desktop) */}
               <div className="hidden md:flex items-center space-x-6">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium text-gray-700">Mode:</span>
@@ -472,7 +503,7 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
         {/* Main Content */}
         <div className="flex">
           
-          {/* Step Sidebar */}
+          {/* Slim Step Sidebar */}
           <div className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 transition-all duration-300 hidden lg:block`}>
             <div className="p-4">
               
@@ -773,17 +804,26 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                     <div className="flex items-center space-x-3">
                       <Button
                         variant="outline"
-                        onClick={mode === 'FI' ? handlePreviewPDF : handlePreviewPDF}
+                        onClick={handlePreviewPDF}
                         disabled={isPreviewLoading}
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         {isPreviewLoading ? 'Generating...' : 'Generate Preview'}
                       </Button>
                       {pdfBlob && (
-                        <Button onClick={handleDownloadPDF}>
-                          <Download className="h-4 w-4 mr-2" />
-                          Download PDF
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={handleDownloadXML}
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            Download XML
+                          </Button>
+                          <Button onClick={handleDownloadPDF}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Download PDF
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -795,6 +835,7 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                     showControls={true}
                     onPreviewPDF={handlePreviewPDF}
                     onDownloadPDF={handleDownloadPDF}
+                    onDownloadXML={handleDownloadXML}
                     isPreviewLoading={isPreviewLoading}
                     hasPreviewDocument={!!previewDocument}
                     mode={mode}
@@ -875,7 +916,7 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
         />
 
         {/* Toast Container */}
-        {toastContainer}
+        <ToastContainer />
       </div>
     </FormProvider>
   );
