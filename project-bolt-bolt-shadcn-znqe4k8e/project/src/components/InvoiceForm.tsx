@@ -9,8 +9,6 @@ import { useLanguage } from '@/context/LanguageContext';
 import { type PDFGeneratorOptions } from '../lib/pdfTypes';
 import { type TemplateName } from '../lib/pdf/templates';
 import { generatePDF } from '../lib/pdf/generator';
-import { EnhancedStepsProgress } from './ui/EnhancedStepsProgress';
-import { ContextualHelpPanel } from './ui/ContextualHelpPanel';
 import { useStepTracking } from '../hooks/useStepTracking';
 import {
   createPurchaseOrder,
@@ -22,44 +20,48 @@ import {
 import { createPurchaseOrder as createPO, createDeliveryNote as createDN } from '../lib/dataProcessing';
 import { MMItem, FIItem, defaultMMItem, defaultFIItem, type BasicInfo } from '../types/forms';
 
-// Import new split components
-import { InvoiceFormHeader } from './InvoiceFormHeader';
-import { InvoiceFormContent } from './InvoiceFormContent';
-import { InvoiceFormActions } from './InvoiceFormActions';
-import { InvoiceFormModals } from './InvoiceFormModals';
+// Import components
 import { InvoiceBasicInfo } from './InvoiceBasicInfo';
 import { LogoUpload } from './LogoUpload';
+import { MMItemsSection } from './MMItemsSection';
+import { FIItemsSection } from './FIItemsSection';
+import { PDFViewer } from './PDFViewer';
+import { InvoiceFormModals } from './InvoiceFormModals';
 import { useInvoiceFormData } from '../hooks/useInvoiceFormData';
+import { DemoDataFiller } from './DemoDataFiller';
 
 // UI Components
 import { LoadingSpinner } from './ui/loading-spinner';
 import useToast from './ui/toast';
 import useAutoSave from '@/hooks/useAutoSave';
 import { createStandardToastHandlers, ErrorTypes } from '../lib/errorHandling';
-import { DemoDataFiller } from './DemoDataFiller';
-import { Building2, UserPlus, History, Package, FileText, Eye, Settings, Sparkles, Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { 
+  FileText, 
+  Building2, 
+  UserPlus, 
+  Package, 
+  History, 
+  Globe, 
+  Wand2,
+  ChevronLeft,
+  ChevronRight,
+  Settings,
+  Eye,
+  Download,
+  Save,
+  HelpCircle,
+  Menu,
+  X
+} from 'lucide-react';
 
 const INITIAL_ORDER_NUMBER = 4500000000;
 const INITIAL_DELIVERY_NOTE_NUMBER = 1;
-
-// TypeScript interface for global variable
-declare global {
-  interface Window {
-    _lastSubmitResult?: {
-      order?: {
-        cid?: string;
-        cponumber?: string;
-      };
-      note?: {
-        cid?: string;
-        cdnnumberexternal?: string;
-      };
-    };
-  }
-}
 
 interface InvoiceFormProps {
   onSubmitSuccess?: () => void;
@@ -67,7 +69,7 @@ interface InvoiceFormProps {
 
 export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element {
   const queryClient = useQueryClient();
-  const { t, currentLanguage } = useLanguage();
+  const { t, currentLanguage, setLanguage } = useLanguage();
   const { showToast, ToastContainer: toastContainer } = useToast();
   const standardToast = createStandardToastHandlers(showToast, t);
 
@@ -94,49 +96,36 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
     mode: 'onChange',
   });
 
-  // Use custom hook for data fetching and filtering
+  // Use custom hook for data fetching
   const {
     vendors,
     materials,
     recipients,
-    taxCodes,
-    exchangeRates,
     filteredMaterials,
-    recipientCompanyCode,
     getTaxCodeInfo,
-    getExchangeRate,
     isLoading,
-    hasError,
-    errorDetails,
   } = useInvoiceFormData(methods);
-
-  // Workflow status for PDF checking
-  const [workflowState, setWorkflowState] = useState<'initial' | 'previewGenerated' | 'submitted'>('initial');
-  const [previewDocument, setPreviewDocument] = useState<any>(null);
-
-  // Counters for PO and Delivery Note
-  const [orderNumberCounter, setOrderNumberCounter] = useState(INITIAL_ORDER_NUMBER);
-  const [deliveryNoteCounter, setDeliveryNoteCounter] = useState(INITIAL_DELIVERY_NOTE_NUMBER);
-  const [numbersLoaded, setNumbersLoaded] = useState(false);
-
-  // Submit results state
-  const [submitResults, setSubmitResults] = useState<{ 
-    order?: any, 
-    note?: any 
-  } | null>(null);
 
   // Main form state
   const [mode, setMode] = useState<'MM' | 'FI'>('MM');
+  const [template, setTemplate] = useState<TemplateName>('businessstandard');
+  const [activeTab, setActiveTab] = useState('basic');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Items state
+  const [invoiceItems, setInvoiceItems] = useState<MMItem[]>([defaultMMItem]);
+  const [orderItems, setOrderItems] = useState<MMItem[]>([defaultMMItem]);
+  const [deliveryItems, setDeliveryItems] = useState<MMItem[]>([defaultMMItem]);
+  const [fiItems, setFIItems] = useState<FIItem[]>([defaultFIItem]);
   const [syncMaterials, setSyncMaterials] = useState(false);
+
+  // Logo and PDF state
   const [logo, setLogo] = useState<Logo | null>(null);
   const [logoConfig, setLogoConfig] = useState<any>(null);
-  const [template, setTemplate] = useState<TemplateName>('businessstandard');
-
-  // Loading states
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-  
-  // UI state for help panel
-  const [isHelpCollapsed, setIsHelpCollapsed] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState<any>(null);
 
   // Modal states
   const [isVersionsModalOpen, setIsVersionsModalOpen] = useState(false);
@@ -144,19 +133,12 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
   const [isVendorModalOpen, setIsVendorModalOpen] = useState(false);
   const [isCreditorModalOpen, setIsCreditorModalOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [isLoadingVersion, setIsLoadingVersion] = useState(false);
   const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false);
 
-  // XML and PDF states
-  const [xmlGenerationData, setXmlGenerationData] = useState<any>(null);
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-
-  // Items state
-  const [invoiceItems, setInvoiceItems] = useState<MMItem[]>([defaultMMItem]);
-  const [orderItems, setOrderItems] = useState<MMItem[]>([defaultMMItem]);
-  const [deliveryItems, setDeliveryItems] = useState<MMItem[]>([defaultMMItem]);
-  const [fiItems, setFIItems] = useState<FIItem[]>([defaultFIItem]);
+  // Counters and workflow
+  const [orderNumberCounter, setOrderNumberCounter] = useState(INITIAL_ORDER_NUMBER);
+  const [deliveryNoteCounter, setDeliveryNoteCounter] = useState(INITIAL_DELIVERY_NOTE_NUMBER);
+  const [numbersLoaded, setNumbersLoaded] = useState(false);
 
   // AutoSave Integration
   const formData = {
@@ -167,8 +149,6 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
     orderItems,
     deliveryItems,
     fiItems,
-    orderNumberCounter,
-    deliveryNoteCounter,
   };
 
   const {
@@ -177,7 +157,6 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
     loadVersion: loadVersionData,
     clearAll: clearVersions,
     lastSaved,
-    isSaving,
     saveNamed,
     deleteVersion,
     renameVersion
@@ -185,67 +164,9 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
     data: formData,
     key: 'invoice_form',
     interval: 0,
-    onAfterSave: (data) => {
-      standardToast.showSuccess('autosave.saved', new Date().toLocaleTimeString());
-    },
-    onSaveError: (error) => {
-      standardToast.showError(ErrorTypes.SAVE_ERROR, error);
-    },
   });
 
-  // Version loading function that properly updates form state
-  const loadVersion = useCallback((timestamp: number) => {
-    try {
-      const versionData = loadVersionData(timestamp);
-      if (versionData) {
-        // Update React Hook Form
-        methods.reset(versionData.basicInfo || {});
-        
-        // Update other form data through setter functions
-        if (versionData.mode) setMode(versionData.mode);
-        if (versionData.template) setTemplate(versionData.template);
-        if (versionData.invoiceItems) setInvoiceItems(versionData.invoiceItems);
-        if (versionData.orderItems) setOrderItems(versionData.orderItems);
-        if (versionData.deliveryItems) setDeliveryItems(versionData.deliveryItems);
-        if (versionData.fiItems) setFIItems(versionData.fiItems);
-        if (versionData.logo) setLogo(versionData.logo);
-        if (versionData.logoConfig) setLogoConfig(versionData.logoConfig);
-        
-        standardToast.showSuccess('versions.loaded', '');
-        return versionData;
-      } else {
-        standardToast.showError('versions.loadError', 'Version not found');
-        return null;
-      }
-    } catch (error) {
-      console.error('Error loading version:', error);
-      standardToast.showError('versions.loadError', error);
-      return null;
-    }
-  }, [loadVersionData, methods, setMode, setTemplate, setInvoiceItems, setOrderItems, setDeliveryItems, setFIItems, setLogo, setLogoConfig, standardToast]);
-
-  // Load last numbers on component mount
-  useEffect(() => {
-    if (!numbersLoaded) {
-      getLastNumbers()
-        .then(({ lastPONumber, lastDNNumber }) => {
-          const poNumber = parseInt(lastPONumber) || INITIAL_ORDER_NUMBER;
-          // Extrahiere nur die numerische Zahl aus L2BRL Format (z.B. L2BRL0047 -> 47)
-          const dnMatch = lastDNNumber.match(/L2BRL0*(\d+)/);
-          const dnNumber = dnMatch ? parseInt(dnMatch[1]) : INITIAL_DELIVERY_NOTE_NUMBER;
-          
-          setOrderNumberCounter(poNumber);
-          setDeliveryNoteCounter(dnNumber);
-          setNumbersLoaded(true);
-        })
-        .catch(error => {
-          console.warn('Could not load last numbers, using defaults:', error);
-          setNumbersLoaded(true);
-        });
-    }
-  }, [numbersLoaded]);
-
-  // Use centralized step tracking
+  // Step tracking
   const stepTracking = useStepTracking({
     context: 'form',
     methods,
@@ -257,21 +178,22 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
     pdfBlob
   });
 
-  // Memoized expensive operations for performance
-  const memoizedValidItems = useMemo(() => {
-    return invoiceItems.filter(item => item.materialId?.trim());
-  }, [invoiceItems]);
-
-  const memoizedMappedItems = useMemo(() => {
-    return memoizedValidItems.map(item => {
-      const material = materials.find(m => m.cid?.toString() === item.materialId);
-      return {
-        item,
-        material,
-        isValid: !!material
-      };
-    });
-  }, [memoizedValidItems, materials]);
+  // Load last numbers on mount
+  useEffect(() => {
+    if (!numbersLoaded) {
+      getLastNumbers()
+        .then(({ lastPONumber, lastDNNumber }) => {
+          const poNumber = parseInt(lastPONumber) || INITIAL_ORDER_NUMBER;
+          const dnMatch = lastDNNumber.match(/L2BRL0*(\d+)/);
+          const dnNumber = dnMatch ? parseInt(dnMatch[1]) : INITIAL_DELIVERY_NOTE_NUMBER;
+          
+          setOrderNumberCounter(poNumber);
+          setDeliveryNoteCounter(dnNumber);
+          setNumbersLoaded(true);
+        })
+        .catch(() => setNumbersLoaded(true));
+    }
+  }, [numbersLoaded]);
 
   // PDF generation handlers
   const handlePreviewPDF = async () => {
@@ -285,12 +207,6 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
         throw new Error('Vendor and recipient must be selected');
       }
 
-      // Validate vendor bank data
-      if (!currentVendor.bank_name || !currentVendor.ciban || !currentVendor.cbic) {
-        console.warn('Vendor bank data incomplete - PDF may have missing payment information');
-      }
-
-      // Prepare PDF data for FI mode
       const pdfData: PDFGeneratorOptions = {
         invoiceNumber: formData.invoiceNumber || 'PREVIEW-001',
         invoiceDate: formData.invoiceDate,
@@ -307,7 +223,6 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
           price: parseFloat(item.price?.toString() || '0') || 0,
           total: parseFloat(item.total?.toString() || '0') || 0,
           currency: item.currency || 'EUR',
-          taxCode: item.taxCode,
           taxRate: item.taxRate || 0
         })),
         logo: logo?.content,
@@ -316,17 +231,13 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
         template: template
       };
 
-      // Validate PDF data (validatePDFData throws on validation errors)
       const validatedData = validatePDFData(pdfData);
-
-      // Generate PDF
       const blob = await generatePDF(validatedData, template, t, currentLanguage) as Blob;
 
-      // PDF generated successfully - verify blob and set for preview
       if (blob && blob.size > 0) {
         setPdfBlob(blob);
         setPreviewDocument(validatedData);
-        setWorkflowState('previewGenerated');
+        setActiveTab('preview'); // Auto-switch to preview tab
         standardToast.showSuccess('pdf.generated', 'PDF preview generated successfully');
       } else {
         throw new Error('Generated PDF blob is empty or invalid');
@@ -334,122 +245,9 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
 
     } catch (error) {
       console.error('Error generating PDF preview:', error);
-      
-      // Show detailed error message
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      showToast({
-        title: 'PDF Generation Failed',
-        message: `Failed to generate PDF: ${errorMessage}`,
-        type: 'error'
-      });
-      
       standardToast.showError(ErrorTypes.PDF_GENERATION_ERROR, error);
     } finally {
       setIsPreviewLoading(false);
-    }
-  };
-
-  const handlePreviewMMPDF = async () => {
-    setIsPreviewLoading(true);
-    try {
-      const formData = methods.getValues();
-      const currentVendor = vendors.find(v => v.cid?.toString() === formData.vendorId);
-      const currentRecipient = recipients.find(r => r.cid?.toString() === formData.recipientId);
-
-      if (!currentVendor || !currentRecipient) {
-        throw new Error('Vendor and recipient must be selected');
-      }
-
-      // Validate vendor bank data for MM mode
-      if (!currentVendor.bank_name || !currentVendor.ciban || !currentVendor.cbic) {
-        console.warn('Vendor bank data incomplete - MM PDF may have missing payment information');
-      }
-
-      // Use memoized items for better performance
-      if (memoizedValidItems.length === 0) {
-        throw new Error('No valid items found. Please add at least one item with a valid material.');
-      }
-
-      // Check if all materials are found
-      const invalidItems = memoizedMappedItems.filter(mapped => !mapped.isValid);
-      if (invalidItems.length > 0) {
-        const invalidIds = invalidItems.map(mapped => mapped.item.materialId).join(', ');
-        throw new Error(`Materials not found for IDs: ${invalidIds}. Please select valid materials.`);
-      }
-
-      // Prepare PDF data for MM mode  
-      const nextOrderNumber = `${orderNumberCounter + 1}`;
-      const nextDeliveryNoteNumber = `L2BRL${(deliveryNoteCounter + 1).toString().padStart(4, '0')}`;
-      
-      
-      const pdfData: PDFGeneratorOptions = {
-        invoiceNumber: formData.invoiceNumber || 'PREVIEW-001',
-        invoiceDate: formData.invoiceDate,
-        orderDate: formData.orderDate,
-        deliveryDate: formData.deliveryDate,
-        orderNumber: nextOrderNumber,
-        deliveryNoteNumber: nextDeliveryNoteNumber,
-        customerNumber: formData.customerNumber,
-        processor: formData.processor,
-        vendor: extendVendor(currentVendor),
-        recipient: extendRecipient(currentRecipient),
-        items: memoizedMappedItems.map(mapped => {
-          const { item, material } = mapped;
-          return {
-            description: material!.cmaterialname || material!.cdescription || `Material ${item.materialId}`,
-            quantity: parseFloat(item.quantity?.toString() || '0') || 0,
-            unit: item.unit || material!.cunit || 'ST',
-            price: parseFloat(item.price?.toString() || '0') || 0,
-            total: parseFloat(item.total?.toString() || '0') || 0,
-            currency: item.currency || material!.ccurrency || 'EUR',
-            materialId: item.materialId,
-            taxCode: material!.ctaxcode || '',
-            taxRate: item.taxRate || material!.ctaxrate || 0
-          };
-        }),
-        logo: logo?.content,
-        logoConfig: logoConfig,
-        mode: 'MM',
-        template: template
-      };
-
-      // Validate PDF data (validatePDFData throws on validation errors)
-      const validatedData = validatePDFData(pdfData);
-
-      // Generate PDF
-      const blob = await generatePDF(validatedData, template, t, currentLanguage) as Blob;
-
-      // PDF generated successfully - verify blob and set for preview
-      if (blob && blob.size > 0) {
-        setPdfBlob(blob);
-        setPreviewDocument(validatedData);
-        setWorkflowState('previewGenerated');
-        standardToast.showSuccess('pdf.generated', 'PDF preview generated successfully');
-      } else {
-        throw new Error('Generated PDF blob is empty or invalid');
-      }
-
-    } catch (error) {
-      console.error('Error generating MM PDF preview:', error);
-      
-      // Show detailed error message
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      showToast({
-        title: 'MM PDF Generation Failed',
-        message: `Failed to generate MM PDF: ${errorMessage}`,
-        type: 'error'
-      });
-      
-      standardToast.showError(ErrorTypes.PDF_GENERATION_ERROR, error);
-    } finally {
-      setIsPreviewLoading(false);
-    }
-  };
-
-  const handleDownloadXML = () => {
-    if (xmlGenerationData) {
-      const filename = `invoice-${new Date().toISOString().split('T')[0]}.xml`;
-      downloadXML(xmlGenerationData, filename);
     }
   };
 
@@ -462,155 +260,50 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      
-      // Clean up URL to prevent memory leaks
       setTimeout(() => URL.revokeObjectURL(url), 100);
     }
   }, [pdfBlob]);
 
-  const handleCreateMMDocument = async () => {
-    console.log('Creating MM document...');
-    
-    // Check if we have necessary data
-    const formData = methods.getValues();
-    const currentVendor = vendors.find(v => v.cid?.toString() === formData.vendorId);
-    const currentRecipient = recipients.find(r => r.cid?.toString() === formData.recipientId);
-
-    if (!currentVendor || !currentRecipient) {
-      showToast({
-        title: 'Validation Error',
-        message: 'Please select both vendor and recipient before creating MM document',
-        type: 'error'
-      });
-      return;
-    }
-
-    if (!invoiceItems.some(item => item.materialId?.trim())) {
-      showToast({
-        title: 'Validation Error',
-        message: 'Please add at least one item before creating MM document',
-        type: 'error'
-      });
-      return;
-    }
-
-    // Show confirmation dialog
-    setIsConfirmDialogOpen(true);
-  };
-
-  const handleConfirmSubmitToDatabase = async () => {
-    setIsConfirmDialogOpen(false);
-    
-    try {
-      const formData = methods.getValues();
-      console.log('=== FORM DEBUG ===');
-      console.log('Form Data:', { vendorId: formData.vendorId, recipientId: formData.recipientId });
-      console.log('Available Vendors:', vendors.map(v => ({ cid: v.cid, name: v.cname })));
-      console.log('Available Recipients:', recipients.map(r => ({ cid: r.cid, name: r.cname })));
-      
-      const currentVendor = vendors.find(v => v.cid?.toString() === formData.vendorId);
-      const currentRecipient = recipients.find(r => r.cid?.toString() === formData.recipientId);
-
-      console.log('Found Vendor:', currentVendor ? { cid: currentVendor.cid, name: currentVendor.cname } : null);
-      console.log('Found Recipient:', currentRecipient ? { cid: currentRecipient.cid, name: currentRecipient.cname } : null);
-
-      if (!currentVendor || !currentRecipient) {
-        throw new Error('Vendor and recipient must be selected');
-      }
-
-      // Prepare basic info for PO/DN creation - convert form string IDs to database format
-      const basicInfo = {
-        vendorId: currentVendor.cid?.toString() || '', // Use actual database ID as string
-        recipientId: currentRecipient.cid?.toString() || '', // Use actual database ID as string
-        orderDate: formData.orderDate,
-        ccompanycode: currentRecipient.ccompanycode
-      };
-
-      console.log('BasicInfo for API:', basicInfo);
-      console.log('Current Vendor:', { id: currentVendor.cid, name: currentVendor.cname });
-      console.log('Current Recipient:', { id: currentRecipient.cid, name: currentRecipient.cname });
-
-      // Create Purchase Order
-      console.log('Creating PO with basicInfo:', basicInfo);
-      console.log('Invoice items:', invoiceItems);
-      const orderData = createPO(basicInfo, invoiceItems, materials);
-      console.log('Order data created:', orderData);
-      console.log('Order data structure:', {
-        order: orderData.order,
-        items: orderData.items?.length || 0
-      });
-      const orderResult = await createPurchaseOrder(orderData.order, orderData.items);
-
-      // Create Delivery Note
-      const deliveryBasicInfo = {
-        deliveryDate: basicInfo.orderDate, // Use order date as delivery date
-        cdnnumberexternal: '' // Will be generated by server
-      };
-      const noteData = createDN(deliveryBasicInfo, invoiceItems, orderResult.order.cid.toString());
-      const noteResult = await createDeliveryNote(noteData.note, noteData.items);
-
-      // Update counters
-      setOrderNumberCounter(orderNumberCounter + 1);
-      setDeliveryNoteCounter(deliveryNoteCounter + 1);
-
-      // Store results globally for reference
-      window._lastSubmitResult = {
-        order: orderResult.order,
-        note: noteResult.note
-      };
-
-      showToast({
-        title: 'Success',
-        message: `MM Document created successfully!\nPO: ${orderResult.order.cponumber}\nDN: ${noteResult.note.cdnnumberexternal}`,
-        type: 'success'
-      });
-
-      // Call success callback if provided
-      if (onSubmitSuccess) {
-        onSubmitSuccess();
-      }
-
-    } catch (error) {
-      console.error('Error submitting MM document:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      showToast({
-        title: 'Submission Failed',
-        message: `Failed to create MM document: ${errorMessage}`,
-        type: 'error'
-      });
-    }
-  };
-
-  // Handle demo data filling
   const handleFillDemoData = (data: any) => {
-    // Fill basic info
     if (data.basicInfo) {
       Object.keys(data.basicInfo).forEach(key => {
         methods.setValue(key as any, data.basicInfo[key]);
       });
     }
-
-    // Fill items based on mode - force new array creation to trigger re-render
-    if (data.invoiceItems) {
-      setInvoiceItems([...data.invoiceItems]); // Force new array
-    }
-    if (data.orderItems) {
-      setOrderItems([...data.orderItems]); // Force new array
-    }
-    if (data.deliveryItems) {
-      setDeliveryItems([...data.deliveryItems]); // Force new array
-    }
-    if (data.fiItems) {
-      setFIItems([...data.fiItems]); // Force new array
-    }
+    if (data.invoiceItems) setInvoiceItems([...data.invoiceItems]);
+    if (data.orderItems) setOrderItems([...data.orderItems]);
+    if (data.deliveryItems) setDeliveryItems([...data.deliveryItems]);
+    if (data.fiItems) setFIItems([...data.fiItems]);
   };
+
+  const loadVersion = useCallback((timestamp: number) => {
+    try {
+      const versionData = loadVersionData(timestamp);
+      if (versionData) {
+        methods.reset(versionData.basicInfo || {});
+        if (versionData.mode) setMode(versionData.mode);
+        if (versionData.template) setTemplate(versionData.template);
+        if (versionData.invoiceItems) setInvoiceItems(versionData.invoiceItems);
+        if (versionData.orderItems) setOrderItems(versionData.orderItems);
+        if (versionData.deliveryItems) setDeliveryItems(versionData.deliveryItems);
+        if (versionData.fiItems) setFIItems(versionData.fiItems);
+        if (versionData.logo) setLogo(versionData.logo);
+        if (versionData.logoConfig) setLogoConfig(versionData.logoConfig);
+        
+        standardToast.showSuccess('versions.loaded', '');
+        return versionData;
+      }
+    } catch (error) {
+      standardToast.showError('versions.loadError', error);
+      return null;
+    }
+  }, [loadVersionData, methods, standardToast]);
 
   // Show loading spinner while data is loading
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner />
+        <LoadingSpinner size="lg" text="Loading invoice data..." />
       </div>
     );
   }
@@ -618,303 +311,536 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
   return (
     <FormProvider {...methods}>
       <div className="min-h-screen bg-gray-50">
-        <form onSubmit={methods.handleSubmit(() => {})}>
-          
-          {/* Clean Header */}
-          <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-            <div className="max-w-7xl mx-auto px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-purple-600 p-2 rounded-lg">
-                    <FileText className="h-6 w-6 text-white" />
+        
+        {/* Top Toolbar */}
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              
+              {/* Left: Logo & Title */}
+              <div className="flex items-center space-x-4">
+                <div className="bg-purple-600 p-2 rounded-lg">
+                  <FileText className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold text-gray-900">Invoice Generator</h1>
+                  <p className="text-xs text-gray-500 hidden sm:block">Professional invoice creation</p>
+                </div>
+              </div>
+
+              {/* Center: Mode Toggle (Desktop) */}
+              <div className="hidden md:flex items-center space-x-6">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-700">Mode:</span>
+                  <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button
+                      type="button"
+                      onClick={() => setMode('MM')}
+                      className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                        mode === 'MM' 
+                          ? 'bg-white text-gray-900 shadow-sm' 
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      MM
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMode('FI')}
+                      className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                        mode === 'FI' 
+                          ? 'bg-white text-gray-900 shadow-sm' 
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      FI
+                    </button>
                   </div>
-                  <div>
-                    <h1 className="text-xl font-semibold text-gray-900">Invoice Generator</h1>
-                    <p className="text-sm text-gray-500">Create professional invoices with ease</p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-700">Template:</span>
+                  <Select value={template} onValueChange={(value) => setTemplate(value as TemplateName)}>
+                    <SelectTrigger className="w-40 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="businessstandard">Business Standard</SelectItem>
+                      <SelectItem value="classic">Classic</SelectItem>
+                      <SelectItem value="professional">Professional</SelectItem>
+                      <SelectItem value="businessgreen">Business Green</SelectItem>
+                      <SelectItem value="allrauer2">Allrauer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Right: Actions */}
+              <div className="flex items-center space-x-3">
+                {/* Language Switch */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setLanguage(currentLanguage === 'en' ? 'de' : 'en')}
+                  className="hidden sm:flex"
+                >
+                  <Globe className="h-4 w-4 mr-1" />
+                  {currentLanguage.toUpperCase()}
+                </Button>
+
+                {/* Demo Data */}
+                <DemoDataFiller
+                  mode={mode}
+                  vendors={vendors}
+                  recipients={recipients}
+                  materials={materials}
+                  currentVendorId={methods.watch('vendorId')}
+                  currentRecipientId={methods.watch('recipientId')}
+                  onFillData={handleFillDemoData}
+                />
+
+                {/* Versions */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsVersionsModalOpen(true)}
+                  className="hidden sm:flex"
+                >
+                  <History className="h-4 w-4 mr-1" />
+                  Versions
+                </Button>
+
+                {/* Mobile Menu */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="md:hidden"
+                >
+                  {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
+            {/* Mobile Menu Dropdown */}
+            {isMobileMenuOpen && (
+              <div className="md:hidden border-t border-gray-200 py-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Mode:</span>
+                  <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button
+                      type="button"
+                      onClick={() => setMode('MM')}
+                      className={`px-3 py-1 text-sm font-medium rounded-md ${
+                        mode === 'MM' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                      }`}
+                    >
+                      MM
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMode('FI')}
+                      className={`px-3 py-1 text-sm font-medium rounded-md ${
+                        mode === 'FI' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                      }`}
+                    >
+                      FI
+                    </button>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-6">
-                  {/* Mode Selection */}
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-700">Mode:</span>
-                    <div className="flex bg-gray-100 rounded-lg p-1">
-                      <button
-                        type="button"
-                        onClick={() => setMode('MM')}
-                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                          mode === 'MM' 
-                            ? 'bg-white text-gray-900 shadow-sm' 
-                            : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                      >
-                        MM
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setMode('FI')}
-                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                          mode === 'FI' 
-                            ? 'bg-white text-gray-900 shadow-sm' 
-                            : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                      >
-                        FI
-                      </button>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Template:</span>
+                  <Select value={template} onValueChange={(value) => setTemplate(value as TemplateName)}>
+                    <SelectTrigger className="w-40 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="businessstandard">Business Standard</SelectItem>
+                      <SelectItem value="classic">Classic</SelectItem>
+                      <SelectItem value="professional">Professional</SelectItem>
+                      <SelectItem value="businessgreen">Business Green</SelectItem>
+                      <SelectItem value="allrauer2">Allrauer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex">
+          
+          {/* Step Sidebar */}
+          <div className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 transition-all duration-300 hidden lg:block`}>
+            <div className="p-4">
+              
+              {/* Collapse Toggle */}
+              <div className="flex items-center justify-between mb-6">
+                {!isSidebarCollapsed && (
+                  <h3 className="text-sm font-semibold text-gray-900">Progress</h3>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                  className="p-1"
+                >
+                  {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                </Button>
+              </div>
+
+              {/* Step Navigation */}
+              <div className="space-y-2">
+                {[
+                  { id: 'basic', label: 'Basic Info', icon: FileText, completed: stepTracking.isStepCompleted('data') },
+                  { id: 'items', label: 'Items', icon: Package, completed: stepTracking.isStepCompleted('items') },
+                  { id: 'preview', label: 'Preview', icon: Eye, completed: stepTracking.isStepCompleted('preview') }
+                ].map((step, index) => (
+                  <button
+                    key={step.id}
+                    onClick={() => setActiveTab(step.id)}
+                    className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                      activeTab === step.id
+                        ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                    title={isSidebarCollapsed ? step.label : undefined}
+                  >
+                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
+                      step.completed
+                        ? 'bg-green-500 text-white'
+                        : activeTab === step.id
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {step.completed ? '✓' : index + 1}
                     </div>
-                  </div>
+                    {!isSidebarCollapsed && (
+                      <span className="text-sm font-medium">{step.label}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
 
-                  {/* Template Selection */}
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-700">Template:</span>
-                    <Select value={template} onValueChange={(value) => setTemplate(value as TemplateName)}>
-                      <SelectTrigger className="w-40 h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="businessstandard">Business Standard</SelectItem>
-                        <SelectItem value="classic">Classic</SelectItem>
-                        <SelectItem value="professional">Professional</SelectItem>
-                        <SelectItem value="businessgreen">Business Green</SelectItem>
-                        <SelectItem value="allrauer2">Allrauer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Quick Actions */}
-                  <div className="flex items-center space-x-2">
+              {/* Quick Actions */}
+              {!isSidebarCollapsed && (
+                <div className="mt-8">
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</h4>
+                  <div className="space-y-2">
                     <Button
-                      type="button"
-                      onClick={() => setIsVersionsModalOpen(true)}
                       variant="outline"
                       size="sm"
+                      onClick={() => setIsVendorModalOpen(true)}
+                      className="w-full justify-start"
                     >
-                      <History className="h-4 w-4 mr-1" />
-                      Versions
+                      <Building2 className="h-4 w-4 mr-2" />
+                      Add Vendor
                     </Button>
-                    <DemoDataFiller
-                      mode={mode}
-                      vendors={vendors}
-                      recipients={recipients}
-                      materials={materials}
-                      currentVendorId={methods.watch('vendorId')}
-                      currentRecipientId={methods.watch('recipientId')}
-                      onFillData={handleFillDemoData}
-                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsCreditorModalOpen(true)}
+                      className="w-full justify-start"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Add Recipient
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsBulkMaterialModalOpen(true)}
+                      className="w-full justify-start"
+                    >
+                      <Package className="h-4 w-4 mr-2" />
+                      Add Materials
+                    </Button>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="max-w-7xl mx-auto px-6 py-6">
-            <div className="grid grid-cols-12 gap-6">
+          {/* Main Content Area */}
+          <div className="flex-1 p-4 sm:p-6 lg:p-8">
+            
+            {/* Mobile Step Bar */}
+            <div className="lg:hidden mb-6">
+              <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-4">
+                {[
+                  { id: 'basic', label: 'Basic', icon: FileText },
+                  { id: 'items', label: 'Items', icon: Package },
+                  { id: 'preview', label: 'Preview', icon: Eye }
+                ].map((step, index) => (
+                  <button
+                    key={step.id}
+                    onClick={() => setActiveTab(step.id)}
+                    className={`flex flex-col items-center space-y-1 px-4 py-2 rounded-lg transition-colors ${
+                      activeTab === step.id
+                        ? 'bg-purple-50 text-purple-700'
+                        : 'text-gray-600'
+                    }`}
+                  >
+                    <step.icon className="h-5 w-5" />
+                    <span className="text-xs font-medium">{step.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            <div className="space-y-6">
               
-              {/* Left Sidebar - Progress */}
-              <div className="col-span-3">
-                <div className="sticky top-24 space-y-4">
-                  {/* Progress Card */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        Progress
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <EnhancedStepsProgress
-                        completedSteps={stepTracking.completedSteps}
-                        currentStep={stepTracking.currentStep || undefined}
-                        orientation="vertical"
-                        className="border-0 shadow-none p-0"
-                      />
-                    </CardContent>
-                  </Card>
-
-                  {/* Quick Actions */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        Quick Actions
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <Button
-                        type="button"
-                        onClick={() => setIsVendorModalOpen(true)}
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start"
-                      >
-                        <Building2 className="h-4 w-4 mr-2" />
-                        Add Vendor
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => setIsCreditorModalOpen(true)}
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start"
-                      >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Add Recipient
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => setIsBulkMaterialModalOpen(true)}
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start"
-                      >
-                        <Package className="h-4 w-4 mr-2" />
-                        Add Materials
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              {/* Main Content Area */}
-              <div className="col-span-6 space-y-6">
-                
-                {/* Basic Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-blue-600" />
-                      Invoice Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <InvoiceBasicInfo mode={mode} vendors={vendors} recipients={recipients} />
-                  </CardContent>
-                </Card>
-
-                {/* Logo & Branding */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <svg className="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                      </svg>
-                      Logo & Branding
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <LogoUpload 
-                      onSuccess={(selectedLogo) => {
-                        setLogo(selectedLogo);
-                        const defaultConfig = {
-                          maxWidth: 200,
-                          maxHeight: 60,
-                          alignment: 'right'
-                        };
-                        setLogoConfig(defaultConfig);
-                      }}
-                      onDialogChange={setIsLogoDialogOpen}
-                      onLogoConfigChange={setLogoConfig}
-                    />
-                  </CardContent>
-                </Card>
-
-                {/* Invoice Items */}
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
-                        Invoice Items
-                      </CardTitle>
-                      {mode === 'MM' && (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id="sync-materials"
-                            checked={syncMaterials}
-                            onChange={(e) => setSyncMaterials(e.target.checked)}
-                            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-                          />
-                          <label htmlFor="sync-materials" className="text-sm text-gray-700">
-                            Sync Materials
-                          </label>
-                        </div>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <InvoiceFormContent
-                      mode={mode}
-                      syncMaterials={syncMaterials}
-                      setSyncMaterials={setSyncMaterials}
-                      logo={logo}
-                      setLogo={setLogo}
-                      logoConfig={logoConfig}
-                      setLogoConfig={setLogoConfig}
-                      setIsLogoDialogOpen={setIsLogoDialogOpen}
-                      vendors={vendors}
-                      recipients={recipients}
-                      invoiceItems={invoiceItems}
-                      setInvoiceItems={setInvoiceItems}
-                      orderItems={orderItems}
-                      setOrderItems={setOrderItems}
-                      deliveryItems={deliveryItems}
-                      setDeliveryItems={setDeliveryItems}
-                      fiItems={fiItems}
-                      setFIItems={setFIItems}
-                      filteredMaterials={filteredMaterials}
-                      getTaxCodeInfo={getTaxCodeInfo}
-                      template={template}
-                      methods={methods}
-                      pdfBlob={pdfBlob}
-                      isPreviewLoading={isPreviewLoading}
-                      previewDocument={previewDocument}
-                      handlePreviewPDF={handlePreviewPDF}
-                      handlePreviewMMPDF={handlePreviewMMPDF}
-                      handleDownloadXML={handleDownloadXML}
-                      handleDownloadPDF={handleDownloadPDF}
-                      handleCreateMMDocument={handleCreateMMDocument}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Right Sidebar - PDF Preview */}
-              <div className="col-span-3">
-                <div className="sticky top-24">
+              {/* Basic Info Tab */}
+              {activeTab === 'basic' && (
+                <div className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Eye className="h-5 w-5 text-orange-600" />
-                        PDF Preview
+                      <CardTitle className="flex items-center space-x-2">
+                        <FileText className="h-5 w-5 text-purple-600" />
+                        <span>Invoice Details</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <InvoiceFormActions
-                        mode={mode}
-                        template={template}
-                        vendors={vendors}
-                        recipients={recipients}
-                        methods={methods}
-                        pdfBlob={pdfBlob}
-                        isPreviewLoading={isPreviewLoading}
-                        previewDocument={previewDocument}
-                        handlePreviewPDF={handlePreviewPDF}
-                        handlePreviewMMPDF={handlePreviewMMPDF}
-                        handleDownloadXML={handleDownloadXML}
-                        handleDownloadPDF={handleDownloadPDF}
-                        handleCreateMMDocument={handleCreateMMDocument}
+                      <InvoiceBasicInfo mode={mode} vendors={vendors} recipients={recipients} />
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Settings className="h-5 w-5 text-purple-600" />
+                        <span>Logo & Branding</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <LogoUpload 
+                        onSuccess={(selectedLogo) => {
+                          setLogo(selectedLogo);
+                          setLogoConfig({
+                            maxWidth: 200,
+                            maxHeight: 60,
+                            alignment: 'right'
+                          });
+                        }}
+                        onDialogChange={setIsLogoDialogOpen}
+                        onLogoConfigChange={setLogoConfig}
                       />
                     </CardContent>
                   </Card>
                 </div>
-              </div>
+              )}
+
+              {/* Items Tab */}
+              {activeTab === 'items' && (
+                <div className="space-y-6">
+                  {mode === 'MM' && (
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-semibold text-gray-900">Invoice Items</h2>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="sync-materials"
+                          checked={syncMaterials}
+                          onChange={(e) => setSyncMaterials(e.target.checked)}
+                          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <label htmlFor="sync-materials" className="text-sm text-gray-700">
+                          Sync Materials
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {mode === 'FI' ? (
+                    <FIItemsSection
+                      items={fiItems}
+                      materials={filteredMaterials}
+                      getTaxCodeInfo={getTaxCodeInfo}
+                      onAddItem={() => setFIItems([...fiItems, defaultFIItem])}
+                      onRemoveItem={(index) => setFIItems(fiItems.filter((_, i) => i !== index))}
+                      onUpdateItem={(index, item) => {
+                        const newItems = [...fiItems];
+                        newItems[index] = item as FIItem;
+                        setFIItems(newItems);
+                      }}
+                    />
+                  ) : (
+                    <Tabs defaultValue="invoice" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="invoice">Invoice Items</TabsTrigger>
+                        <TabsTrigger value="order">Order Items</TabsTrigger>
+                        <TabsTrigger value="delivery">Delivery Items</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="invoice" className="mt-6">
+                        <MMItemsSection
+                          title="Invoice Items"
+                          items={invoiceItems}
+                          materials={filteredMaterials}
+                          onAddItem={() => setInvoiceItems([...invoiceItems, defaultMMItem])}
+                          onRemoveItem={(index) => setInvoiceItems(invoiceItems.filter((_, i) => i !== index))}
+                          onUpdateItem={(index, item) => {
+                            const newItems = [...invoiceItems];
+                            newItems[index] = item;
+                            setInvoiceItems(newItems);
+                          }}
+                          onMaterialSelect={(materialId, index) => {
+                            const material = filteredMaterials.find(m => m.cid.toString() === materialId);
+                            if (material) {
+                              const newItems = [...invoiceItems];
+                              newItems[index] = {
+                                ...newItems[index],
+                                materialId,
+                                price: material.cnetamount || 0,
+                                unit: material.cunit || 'ST',
+                                taxRate: Math.round((material.ctaxrate || 0.19) * 100),
+                              };
+                              setInvoiceItems(newItems);
+                            }
+                          }}
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="order" className="mt-6">
+                        <MMItemsSection
+                          title="Order Items"
+                          items={orderItems}
+                          materials={filteredMaterials}
+                          onAddItem={() => setOrderItems([...orderItems, defaultMMItem])}
+                          onRemoveItem={(index) => setOrderItems(orderItems.filter((_, i) => i !== index))}
+                          onUpdateItem={(index, item) => {
+                            const newItems = [...orderItems];
+                            newItems[index] = item;
+                            setOrderItems(newItems);
+                          }}
+                          onMaterialSelect={(materialId, index) => {
+                            const material = filteredMaterials.find(m => m.cid.toString() === materialId);
+                            if (material) {
+                              const newItems = [...orderItems];
+                              newItems[index] = {
+                                ...newItems[index],
+                                materialId,
+                                price: material.cnetamount || 0,
+                                unit: material.cunit || 'ST',
+                                taxRate: Math.round((material.ctaxrate || 0.19) * 100),
+                              };
+                              setOrderItems(newItems);
+                            }
+                          }}
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="delivery" className="mt-6">
+                        <MMItemsSection
+                          title="Delivery Items"
+                          items={deliveryItems}
+                          materials={filteredMaterials}
+                          onAddItem={() => setDeliveryItems([...deliveryItems, defaultMMItem])}
+                          onRemoveItem={(index) => setDeliveryItems(deliveryItems.filter((_, i) => i !== index))}
+                          onUpdateItem={(index, item) => {
+                            const newItems = [...deliveryItems];
+                            newItems[index] = item;
+                            setDeliveryItems(newItems);
+                          }}
+                          onMaterialSelect={(materialId, index) => {
+                            const material = filteredMaterials.find(m => m.cid.toString() === materialId);
+                            if (material) {
+                              const newItems = [...deliveryItems];
+                              newItems[index] = {
+                                ...newItems[index],
+                                materialId,
+                                price: material.cnetamount || 0,
+                                unit: material.cunit || 'ST',
+                                taxRate: Math.round((material.ctaxrate || 0.19) * 100),
+                              };
+                              setDeliveryItems(newItems);
+                            }
+                          }}
+                        />
+                      </TabsContent>
+                    </Tabs>
+                  )}
+                </div>
+              )}
+
+              {/* Preview Tab */}
+              {activeTab === 'preview' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-900">PDF Preview</h2>
+                    <div className="flex items-center space-x-3">
+                      <Button
+                        variant="outline"
+                        onClick={mode === 'FI' ? handlePreviewPDF : handlePreviewPDF}
+                        disabled={isPreviewLoading}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        {isPreviewLoading ? 'Generating...' : 'Generate Preview'}
+                      </Button>
+                      {pdfBlob && (
+                        <Button onClick={handleDownloadPDF}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Download PDF
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <PDFViewer
+                    pdfBlob={pdfBlob}
+                    templateName={template}
+                    title="PDF Preview"
+                    showControls={true}
+                    onPreviewPDF={handlePreviewPDF}
+                    onDownloadPDF={handleDownloadPDF}
+                    isPreviewLoading={isPreviewLoading}
+                    hasPreviewDocument={!!previewDocument}
+                    mode={mode}
+                    canGenerateActions={!!methods.getValues('vendorId') && !!methods.getValues('recipientId')}
+                    className="w-full"
+                  />
+                </div>
+              )}
             </div>
           </div>
-        </form>
+        </div>
+
+        {/* Sticky Mobile Footer */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-10">
+          <div className="flex items-center justify-between space-x-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => saveForm()}
+              disabled={isSaving}
+            >
+              <Save className="h-4 w-4 mr-1" />
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePreviewPDF}
+              disabled={isPreviewLoading}
+            >
+              <Eye className="h-4 w-4 mr-1" />
+              Preview
+            </Button>
+            
+            {pdfBlob && (
+              <Button
+                size="sm"
+                onClick={handleDownloadPDF}
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Download
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* All Modal Dialogs */}
         <InvoiceFormModals
@@ -928,7 +854,7 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
           setIsVersionsModalOpen={setIsVersionsModalOpen}
           isConfirmDialogOpen={isConfirmDialogOpen}
           setIsConfirmDialogOpen={setIsConfirmDialogOpen}
-          isLoadingVersion={isLoadingVersion}
+          isLoadingVersion={false}
           materials={materials}
           vendors={vendors}
           recipients={recipients}
@@ -945,7 +871,7 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
             queryClient.invalidateQueries({ queryKey: ['recipients'] });
             queryClient.invalidateQueries({ queryKey: ['materials'] });
           }}
-          onConfirmSubmit={handleConfirmSubmitToDatabase}
+          onConfirmSubmit={() => {}}
         />
 
         {/* Toast Container */}
