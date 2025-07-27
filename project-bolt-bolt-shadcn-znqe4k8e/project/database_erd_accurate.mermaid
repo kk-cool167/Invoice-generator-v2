@@ -1,0 +1,429 @@
+erDiagram
+    %% Invoice Generator System - Accurate Database Schema
+    %% Generated from actual PostgreSQL database structure
+    
+    %% Purchase Order System
+    pos {
+        bigint cid PK
+        varchar cponumber
+        date cdate
+        varchar ccompanycode
+        bigint crecipientid FK
+        bigint cvendorid FK
+        bigint ctopid FK
+    }
+    
+    poitems {
+        bigint cid PK
+        bigint cpoid FK
+        varchar cpoitemnumber
+        numeric cnetamount
+        numeric cquantity
+        varchar cunit
+        varchar ccurrency
+        varchar ctype
+        varchar carticlenocustomer
+        varchar carticlenovendor
+        varchar cdescription
+        numeric ctaxrate
+        varchar ctaxcode
+        numeric camountupperlimit
+        numeric cgrexpected
+        numeric cgrpostpergr
+        bigint cdifferentvendorid
+    }
+    
+    poitempackagings {
+        bigint cid PK
+        bigint cpoitemid FK
+        varchar cpackagingtype
+        numeric cquantity
+    }
+    
+    %% Delivery Note System
+    deliverynotes {
+        bigint cid PK
+        varchar cdnnumberexternal
+        date cdate
+        varchar ccompanycode
+        bigint crecipientid FK
+        bigint cvendorid FK
+    }
+    
+    deliverynoteitems {
+        bigint cid PK
+        bigint cdnid FK
+        bigint cpoid FK
+        bigint cpoitemid FK
+        varchar cdnitemnumber
+        numeric cquantity
+    }
+    
+    %% Invoice System
+    invoices {
+        bigint cid PK
+        varchar cdocguid
+        varchar cdochcsid
+        varchar cdociecm
+        varchar cdocmimetype
+        varchar cdoccr
+        varchar cdocid
+        varchar cdocwebcube
+        varchar cerpnumber
+        integer cerpstatus
+        varchar cerpmessage
+        varchar cinumberexternal
+        date cidateexternal
+        varchar ccompanycode
+        bigint crecipientid FK
+        varchar crecipientvatnumber
+        char crecipienttransferto
+        bigint cvendorid FK
+        varchar cvendorvatnumber
+        char cvendortransferfrom
+        varchar cvendorbankid
+        varchar cotvname
+        varchar cotvname2
+        varchar cotvstreet
+        varchar cotvzip
+        varchar cotvcity
+        char cotvcountry
+        varchar cotvtaxnumber
+        varchar cotvbankname
+        varchar cotviban
+        varchar cotvbic
+        varchar cotvbankcode
+        varchar cotvbankaccountnumber
+        char cotvbankcountry
+        numeric cfiscalyear
+        date cdate
+        numeric cperiod
+        varchar ctype
+        varchar cordertype
+        varchar cscbindicator
+        numeric csubsequentdebit
+        numeric cnetamount
+        numeric ctaxamount
+        numeric cgrosstotal
+        numeric cgrossdiscount
+        numeric ctotalamount
+        char ccurrency
+        date cbaselinedate
+        bigint ctopid FK
+        numeric ctopdays1
+        numeric ctopdiscount1
+        numeric ctopdays2
+        numeric ctopdiscount2
+        numeric ctopdays3
+        numeric ctopdiscount3
+        numeric ctopduedays
+        numeric cpaymentblock
+        varchar ctext
+        date cpaymentdate
+        varchar cpaymentmethod
+        varchar cesrreferencenumber
+    }
+    
+    invoiceitems {
+        bigint cid PK
+        varchar ciitemnumber
+        bigint ciid FK
+        bigint cpoid FK
+        bigint cpoitemid FK
+        bigint cdnid FK
+        bigint cdnitemid FK
+        varchar ctype
+        varchar cdescription
+        numeric ctaxrate
+        varchar ctaxcode
+        numeric cnetunitamount
+        numeric ctaxamount
+        numeric cquantity
+        varchar cunit
+        numeric cnettotalamount
+        char ccurrency
+        bigint ccostcenterid FK
+        bigint cglaccountid FK
+        bigint cinternalorderid FK
+        bigint cwbsid FK
+        bigint cassetid FK
+        varchar ctext
+    }
+    
+    invoiceattachments {
+        bigint cid PK
+        bigint ciid FK
+        varchar cfilename
+        bytea cfiledata
+    }
+    
+    parkedinvoices {
+        bigint cid PK
+        varchar structure_same_as_invoices
+    }
+    
+    parkedinvoiceitems {
+        bigint cid PK
+        varchar structure_same_as_invoiceitems
+    }
+    
+    %% Master Data
+    vendormasterdata {
+        bigint cid PK
+        varchar cvendorid UK
+        varchar ccompanycode
+        varchar cname
+        varchar cname2
+        varchar cstreet
+        varchar czip
+        varchar ccity
+        char ccountry
+        varchar ccountryoforigin
+        varchar cpozip
+        varchar cpobox
+        varchar cvatnumber
+        varchar ctaxnumber
+        varchar cfon
+        varchar cfax
+        varchar cemail
+        varchar curl
+        bigint ctopid FK
+        integer conetime
+        integer calwayswithpo
+        integer calwayswithoutpo
+    }
+    
+    recipientmasterdata {
+        bigint cid PK
+        varchar crecipientid UK
+        varchar ccompanycode
+        varchar cname
+        varchar cname2
+        varchar cstreet
+        varchar czip
+        varchar ccity
+        char ccountry
+        varchar cpozip
+        varchar cpobox
+        varchar cfon
+        varchar cfax
+        varchar cemail
+        varchar curl
+        varchar cvatnumber
+        varchar ctaxnumber
+        varchar cmatchcodepos
+        varchar cmatchcodeneg
+        varchar ccompanyformanchor
+        varchar ccompanyformform
+    }
+    
+    bankdata {
+        bigint cid PK
+        varchar cbankid UK
+        varchar cname
+        varchar caccountnumber
+        varchar ciban
+        varchar cbic
+        varchar cswift
+        char ccountry
+    }
+    
+    materials {
+        integer cid PK
+        varchar cmaterialnumber
+        varchar cdescription
+        varchar ctype
+        varchar ctaxcode
+        numeric ctaxrate
+        varchar cunit
+        numeric cnetamount
+        char ccurrency
+    }
+    
+    %% Financial Objects
+    glaccounts {
+        bigint cid PK
+        varchar cglaccountcode UK
+        varchar cglaccountname
+        varchar caccounttype
+        varchar ccompanycode
+    }
+    
+    costcenters {
+        bigint cid PK
+        varchar ccostcentercode UK
+        varchar ccostcentername
+        varchar ccompanycode
+    }
+    
+    internalorders {
+        bigint cid PK
+        varchar cinternalordercode UK
+        varchar cinternalordername
+        varchar cordertype
+        varchar ccompanycode
+    }
+    
+    wbselements {
+        bigint cid PK
+        varchar cwbselementcode UK
+        varchar cwbselementname
+        varchar cprojectcode
+        varchar ccompanycode
+    }
+    
+    assets {
+        bigint cid PK
+        varchar cassetcode UK
+        varchar cassetname
+        varchar cassetclass
+        varchar ccompanycode
+    }
+    
+    %% Supporting Tables
+    units {
+        bigint cid PK
+        varchar cunitcode UK
+        varchar cunitname
+        char clanguage
+    }
+    
+    taxcodes {
+        bigint cid PK
+        varchar ccompanycode
+        date cvalidfrom
+        date cvalidto
+        varchar cscenario
+        char ccountry
+        varchar ccode
+        numeric crate
+        varchar cdescription
+    }
+    
+    termsofpayment {
+        bigint cid PK
+        varchar ctermscode UK
+        varchar ctermsdescription
+        integer cdaysnet
+        varchar ccompanycode
+    }
+    
+    paymentmethods {
+        bigint cid PK
+        varchar cpaymentmethodcode UK
+        varchar cpaymentmethodname
+    }
+    
+    exchangerates {
+        bigint cid PK
+        char cfromcurrency
+        char ctocurrency
+        numeric crate
+        date cvalidfrom
+        date cvalidto
+    }
+    
+    scbindicators {
+        bigint cid PK
+        varchar cscbindicatorcode UK
+        varchar cscbindicatorname
+    }
+    
+    %% Junction Tables
+    relvendorbank {
+        bigint cvendorid FK
+        varchar cbankid FK
+    }
+    
+    relrecipientvendor {
+        bigint crecipientid FK
+        varchar cvendorid FK
+    }
+    
+    relglaccountcostcenter {
+        bigint cglaccountid FK
+        bigint ccostcenterid FK
+    }
+    
+    relinternalordercostcenter {
+        bigint cinternalorderid FK
+        bigint ccostcenterid FK
+    }
+    
+    vendorvatnumbers {
+        bigint cid PK
+        varchar cvendorid FK
+        varchar cvatnumber
+        char ccountry
+    }
+    
+    recipientvatnumbers {
+        bigint cid PK
+        bigint crecipientid FK
+        varchar cvatnumber
+        char ccountry
+    }
+    
+    %% Primary Relationships
+    pos ||--o{ poitems : "contains"
+    poitems ||--o{ poitempackagings : "has_packaging"
+    poitems ||--o{ deliverynoteitems : "delivered_via"
+    pos ||--o{ deliverynoteitems : "referenced_in"
+    deliverynotes ||--o{ deliverynoteitems : "contains"
+    
+    invoices ||--o{ invoiceitems : "contains"
+    invoices ||--o{ invoiceattachments : "has_attachments"
+    
+    vendormasterdata ||--o{ vendorvatnumbers : "has_vat_numbers"
+    recipientmasterdata ||--o{ recipientvatnumbers : "has_vat_numbers"
+    
+    vendormasterdata ||--o{ relvendorbank : "has_banks"
+    bankdata ||--o{ relvendorbank : "used_by_vendors"
+    
+    recipientmasterdata ||--o{ relrecipientvendor : "linked_to"
+    vendormasterdata ||--o{ relrecipientvendor : "services"
+    
+    glaccounts ||--o{ relglaccountcostcenter : "mapped_to"
+    costcenters ||--o{ relglaccountcostcenter : "receives_postings"
+    
+    internalorders ||--o{ relinternalordercostcenter : "assigned_to"
+    costcenters ||--o{ relinternalordercostcenter : "manages"
+    
+    %% Foreign Key Relationships
+    pos }o--|| recipientmasterdata : "to_recipient"
+    pos }o--|| vendormasterdata : "from_vendor"
+    pos }o--o| termsofpayment : "payment_terms"
+    
+    deliverynotes }o--|| recipientmasterdata : "to_recipient"
+    deliverynotes }o--|| vendormasterdata : "from_vendor"
+    
+    invoices }o--|| recipientmasterdata : "to_recipient"
+    invoices }o--|| vendormasterdata : "from_vendor"
+    invoices }o--o| termsofpayment : "payment_terms"
+    
+    invoiceitems }o--o| pos : "references_po"
+    invoiceitems }o--o| poitems : "references_po_item"
+    invoiceitems }o--o| deliverynotes : "references_dn"
+    invoiceitems }o--o| deliverynoteitems : "references_dn_item"
+    invoiceitems }o--o| costcenters : "charges_to"
+    invoiceitems }o--o| glaccounts : "posts_to"
+    invoiceitems }o--o| internalorders : "charges_to"
+    invoiceitems }o--o| wbselements : "charges_to"
+    invoiceitems }o--o| assets : "capitalizes_to"
+    
+    vendormasterdata }o--o| termsofpayment : "default_terms"
+    
+    relvendorbank }o--|| vendormasterdata : "vendor"
+    relvendorbank }o--|| bankdata : "bank"
+    
+    relrecipientvendor }o--|| recipientmasterdata : "recipient"
+    relrecipientvendor }o--|| vendormasterdata : "vendor"
+    
+    vendorvatnumbers }o--|| vendormasterdata : "vendor"
+    recipientvatnumbers }o--|| recipientmasterdata : "recipient"
+    
+    relglaccountcostcenter }o--|| glaccounts : "glaccount"
+    relglaccountcostcenter }o--|| costcenters : "costcenter"
+    
+    relinternalordercostcenter }o--|| internalorders : "internalorder"
+    relinternalordercostcenter }o--|| costcenters : "costcenter"

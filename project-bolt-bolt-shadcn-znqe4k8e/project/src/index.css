@@ -1,0 +1,314 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Image Optimization */
+img {
+  image-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* High DPI Image Support */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: optimize-contrast;
+    image-rendering: auto;
+  }
+}
+
+/* Specific optimization for photo images */
+.photo-image {
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* React PDF Styles */
+.react-pdf__Page {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin: 0 auto;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.react-pdf__Page__canvas {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+}
+
+.react-pdf__Page__textContent {
+  display: none;
+}
+
+.react-pdf__Document {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* PDF Loading Spinner */
+.react-pdf__message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Responsive PDF Viewer */
+@media (max-width: 768px) {
+  .react-pdf__Page {
+    max-width: 100%;
+    margin: 0;
+  }
+}
+
+/* PDF Error States */
+.react-pdf__error {
+  color: #ef4444;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 12px;
+  text-align: center;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.container {
+  @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.invoice-form {
+  @apply space-y-4;
+}
+
+.form-section {
+  @apply space-y-3;
+}
+
+.form-section-title {
+  @apply text-base font-medium text-gray-900;
+}
+
+.items-section {
+  @apply space-y-3;
+}
+
+.items-section-header {
+  @apply flex justify-between items-center py-2;
+}
+
+.items-list {
+  @apply space-y-3;
+}
+
+.item-row {
+  @apply grid grid-cols-6 gap-3 items-center;
+}
+
+.date-input {
+  @apply w-full text-sm;
+}
+
+/* Additional styles for better typography */
+.text-xs {
+  @apply text-[0.75rem] leading-[1.125rem];
+}
+
+.text-sm {
+  @apply text-[0.875rem] leading-[1.25rem];
+}
+
+.text-base {
+  @apply text-[1rem] leading-[1.5rem];
+}
+
+.text-lg {
+  @apply text-[1.125rem] leading-[1.75rem];
+}
+
+/* Form field styles */
+.form-label {
+  @apply text-sm font-medium text-gray-700;
+}
+
+.form-input {
+  @apply text-sm;
+}
+
+/* Card styles */
+.card {
+  @apply rounded-lg border border-gray-200 shadow-sm;
+}
+
+.card-header {
+  @apply p-4 border-b border-gray-200;
+}
+
+.card-content {
+  @apply p-4;
+}
+
+/* 响应式布局改进 */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* 确保小屏幕上的可滚动内容不会导致水平滚动 */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* 改善触摸目标 */
+  button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 改善表单元素的间距 */
+  .space-y-1 > * + * {
+    margin-top: 0.5rem;
+  }
+  
+  .space-y-2 > * + * {
+    margin-top: 0.75rem;
+  }
+}
+
+/* 改善中等屏幕的布局 */
+@media (min-width: 641px) and (max-width: 1279px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* 改善网格布局的响应式行为 */
+@media (max-width: 1023px) {
+  .grid-cols-1.lg\\:grid-cols-6 {
+    gap: 1rem;
+  }
+  
+  .grid-cols-1.lg\\:grid-cols-6 > * {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* 改善按钮组的换行 */
+.flex-wrap {
+  row-gap: 0.5rem;
+}
+
+/* Logo卡片布局改进 */
+.logo-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+@media (max-width: 640px) {
+  .logo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+/* Logo卡片悬停效果 */
+.logo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Logo图片容器 */
+.logo-image-container {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.logo-image-container:hover {
+  border-color: #a855f7;
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+}
