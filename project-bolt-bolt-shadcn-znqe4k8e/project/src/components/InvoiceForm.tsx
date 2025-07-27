@@ -37,9 +37,10 @@ import useToast from './ui/toast';
 import useAutoSave from '@/hooks/useAutoSave';
 import { createStandardToastHandlers, ErrorTypes } from '../lib/errorHandling';
 import { DemoDataFiller } from './DemoDataFiller';
-import { Building2, UserPlus, History, Package, FileText, Eye, Settings, Sparkles } from 'lucide-react';
+import { Building2, UserPlus, History, Package, FileText, Eye, Settings, Sparkles, Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 const INITIAL_ORDER_NUMBER = 4500000000;
 const INITIAL_DELIVERY_NOTE_NUMBER = 1;
@@ -309,7 +310,7 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
           taxCode: item.taxCode,
           taxRate: item.taxRate || 0
         })),
-        logo: logo?.dataUrl,
+        logo: logo?.content,
         logoConfig: logoConfig,
         mode: 'FI',
         template: template
@@ -406,7 +407,7 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
             taxRate: item.taxRate || material!.ctaxrate || 0
           };
         }),
-        logo: logo?.dataUrl,
+        logo: logo?.content,
         logoConfig: logoConfig,
         mode: 'MM',
         template: template
@@ -616,35 +617,35 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
 
   return (
     <FormProvider {...methods}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="min-h-screen bg-gray-50">
         <form onSubmit={methods.handleSubmit(() => {})}>
           
-          {/* Modern Header */}
-          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-2xl">
-            <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Clean Header */}
+          <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+            <div className="max-w-7xl mx-auto px-6 py-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-6">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
-                    <FileText className="h-8 w-8 text-white" />
+                <div className="flex items-center space-x-4">
+                  <div className="bg-purple-600 p-2 rounded-lg">
+                    <FileText className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Invoice Generator</h1>
-                    <p className="text-indigo-100 text-lg">Create professional invoices with ease</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Invoice Generator</h1>
+                    <p className="text-sm text-gray-500">Create professional invoices with ease</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center space-x-6">
                   {/* Mode Selection */}
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-                    <div className="text-sm text-white/80 mb-2 font-medium">Mode</div>
-                    <div className="flex space-x-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-700">Mode:</span>
+                    <div className="flex bg-gray-100 rounded-lg p-1">
                       <button
                         type="button"
                         onClick={() => setMode('MM')}
-                        className={`px-6 py-2 rounded-xl font-semibold transition-all duration-300 ${
+                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
                           mode === 'MM' 
-                            ? 'bg-white text-indigo-600 shadow-lg transform scale-105' 
-                            : 'bg-white/20 text-white hover:bg-white/30 hover:scale-105'
+                            ? 'bg-white text-gray-900 shadow-sm' 
+                            : 'text-gray-500 hover:text-gray-700'
                         }`}
                       >
                         MM
@@ -652,10 +653,10 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                       <button
                         type="button"
                         onClick={() => setMode('FI')}
-                        className={`px-6 py-2 rounded-xl font-semibold transition-all duration-300 ${
+                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
                           mode === 'FI' 
-                            ? 'bg-white text-indigo-600 shadow-lg transform scale-105' 
-                            : 'bg-white/20 text-white hover:bg-white/30 hover:scale-105'
+                            ? 'bg-white text-gray-900 shadow-sm' 
+                            : 'text-gray-500 hover:text-gray-700'
                         }`}
                       >
                         FI
@@ -664,10 +665,10 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                   </div>
 
                   {/* Template Selection */}
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-                    <div className="text-sm text-white/80 mb-2 font-medium">Template</div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-700">Template:</span>
                     <Select value={template} onValueChange={(value) => setTemplate(value as TemplateName)}>
-                      <SelectTrigger className="w-48 bg-white/20 border-white/30 text-white">
+                      <SelectTrigger className="w-40 h-8">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -681,14 +682,14 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                   </div>
 
                   {/* Quick Actions */}
-                  <div className="flex space-x-3">
+                  <div className="flex items-center space-x-2">
                     <Button
                       type="button"
                       onClick={() => setIsVersionsModalOpen(true)}
-                      className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm"
+                      variant="outline"
                       size="sm"
                     >
-                      <History className="h-4 w-4 mr-2" />
+                      <History className="h-4 w-4 mr-1" />
                       Versions
                     </Button>
                     <DemoDataFiller
@@ -707,46 +708,45 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
           </div>
 
           {/* Main Content */}
-          <div className="max-w-7xl mx-auto px-6 py-8">
-            <div className="grid grid-cols-12 gap-8">
+          <div className="max-w-7xl mx-auto px-6 py-6">
+            <div className="grid grid-cols-12 gap-6">
               
-              {/* Left Sidebar - Progress & Navigation */}
+              {/* Left Sidebar - Progress */}
               <div className="col-span-3">
-                <div className="sticky top-8 space-y-6">
+                <div className="sticky top-24 space-y-4">
                   {/* Progress Card */}
-                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-gray-100">
-                      <h3 className="font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
-                          <Settings className="h-4 w-4 text-white" />
-                        </div>
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         Progress
-                      </h3>
-                    </div>
-                    <div className="p-6">
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
                       <EnhancedStepsProgress
                         completedSteps={stepTracking.completedSteps}
                         currentStep={stepTracking.currentStep || undefined}
                         orientation="vertical"
+                        className="border-0 shadow-none p-0"
                       />
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
-                  {/* Quick Actions Card */}
-                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-100">
-                      <h3 className="font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                          <Sparkles className="h-4 w-4 text-white" />
-                        </div>
+                  {/* Quick Actions */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         Quick Actions
-                      </h3>
-                    </div>
-                    <div className="p-6 space-y-3">
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
                       <Button
                         type="button"
                         onClick={() => setIsVendorModalOpen(true)}
-                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start"
                       >
                         <Building2 className="h-4 w-4 mr-2" />
                         Add Vendor
@@ -754,7 +754,9 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                       <Button
                         type="button"
                         onClick={() => setIsCreditorModalOpen(true)}
-                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start"
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
                         Add Recipient
@@ -762,57 +764,45 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                       <Button
                         type="button"
                         onClick={() => setIsBulkMaterialModalOpen(true)}
-                        className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start"
                       >
                         <Package className="h-4 w-4 mr-2" />
                         Add Materials
                       </Button>
-                    </div>
-                  </div>
-
-                  {/* Help Panel */}
-                  {!isHelpCollapsed && (
-                    <ContextualHelpPanel
-                      currentStep={stepTracking.currentStep || 'mode'}
-                      completedSteps={stepTracking.completedSteps}
-                      isCollapsed={isHelpCollapsed}
-                      onToggleCollapse={() => setIsHelpCollapsed(!isHelpCollapsed)}
-                    />
-                  )}
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
 
               {/* Main Content Area */}
-              <div className="col-span-6 space-y-8">
+              <div className="col-span-6 space-y-6">
                 
-                {/* Invoice Details Card */}
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
-                        <FileText className="h-4 w-4 text-white" />
-                      </div>
+                {/* Basic Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-blue-600" />
                       Invoice Details
-                    </h2>
-                  </div>
-                  <div className="p-6">
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <InvoiceBasicInfo mode={mode} vendors={vendors} recipients={recipients} />
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
 
-                {/* Logo Configuration Card */}
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                        <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                      </div>
+                {/* Logo & Branding */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <svg className="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
                       Logo & Branding
-                    </h2>
-                  </div>
-                  <div className="p-6">
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <LogoUpload 
                       onSuccess={(selectedLogo) => {
                         setLogo(selectedLogo);
@@ -826,21 +816,19 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                       onDialogChange={setIsLogoDialogOpen}
                       onLogoConfigChange={setLogoConfig}
                     />
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
 
-                {/* Items Section */}
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-gray-100">
+                {/* Invoice Items */}
+                <Card>
+                  <CardHeader>
                     <div className="flex items-center justify-between">
-                      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
-                          <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                          </svg>
-                        </div>
+                      <CardTitle className="flex items-center gap-2">
+                        <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
                         Invoice Items
-                      </h2>
+                      </CardTitle>
                       {mode === 'MM' && (
                         <div className="flex items-center gap-2">
                           <input
@@ -848,16 +836,16 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                             id="sync-materials"
                             checked={syncMaterials}
                             onChange={(e) => setSyncMaterials(e.target.checked)}
-                            className="rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+                            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                           />
-                          <label htmlFor="sync-materials" className="text-sm font-medium text-gray-700">
+                          <label htmlFor="sync-materials" className="text-sm text-gray-700">
                             Sync Materials
                           </label>
                         </div>
                       )}
                     </div>
-                  </div>
-                  <div className="p-6">
+                  </CardHeader>
+                  <CardContent>
                     <InvoiceFormContent
                       mode={mode}
                       syncMaterials={syncMaterials}
@@ -890,23 +878,21 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                       handleDownloadPDF={handleDownloadPDF}
                       handleCreateMMDocument={handleCreateMMDocument}
                     />
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Right Sidebar - PDF Preview */}
               <div className="col-span-3">
-                <div className="sticky top-8">
-                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-gray-100">
-                      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
-                          <Eye className="h-4 w-4 text-white" />
-                        </div>
+                <div className="sticky top-24">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Eye className="h-5 w-5 text-orange-600" />
                         PDF Preview
-                      </h2>
-                    </div>
-                    <div className="p-6">
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
                       <InvoiceFormActions
                         mode={mode}
                         template={template}
@@ -922,8 +908,8 @@ export function InvoiceForm({ onSubmitSuccess }: InvoiceFormProps): JSX.Element 
                         handleDownloadPDF={handleDownloadPDF}
                         handleCreateMMDocument={handleCreateMMDocument}
                       />
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </div>
