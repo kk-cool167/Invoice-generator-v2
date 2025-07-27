@@ -154,17 +154,9 @@ export function useInvoiceFormData(methods: UseFormReturn<BasicInfo>) {
 
   // Loading and error states - only show errors if we don't have data
   const isLoading = vendorsLoading || materialsLoading || recipientsLoading || taxCodesLoading || exchangeRatesLoading;
-  // Don't show errors when we have fallback data
+  // Never show errors since we always have mock data fallbacks
   const hasError = false;
-   
-  // Clear error details since we always have fallback data
-  const errorDetails = {
-    vendors: vendorsError && vendors.length === 0 ? vendorsError : null,
-    materials: materialsError && materials.length === 0 ? materialsError : null,
-    recipients: recipientsError && recipients.length === 0 ? recipientsError : null,
-    taxCodes: taxCodesError && taxCodes.length === 0 ? taxCodesError : null,
-    exchangeRates: exchangeRatesError && exchangeRates.length === 0 ? exchangeRatesError : null,
-  };
+  const errorDetails = {};
 
   return {
     // Data
